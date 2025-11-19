@@ -20,7 +20,7 @@ export default function Home() {
     {/* <NavbarCom /> */}
     <HeaderComponent/>
     <BannerSliderHomeCom />
-    <PublicBlogHomeCom />
+    {/* <PublicBlogHomeCom /> */}
     {/* <LeftSideSliderCom /> */}
     {/* <ContentpageHome/> */}
     <FooterCom />
