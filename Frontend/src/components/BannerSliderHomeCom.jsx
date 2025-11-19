@@ -373,7 +373,7 @@ const BlogLuxuryBanner = () => {
               <img
                 src={banner.image}
                 alt={banner.name}
-                className="w-full h-full object-cover scale-105 group-hover:scale-100 transition-transform duration-[3000ms] ease-out brightness-[0.7]"
+                className="w-full h-full object-cover scale-105 group-hover:scale-100 transition-transform duration-[3000ms] ease-out brightness-[1]"
                 onError={(e) => {
                   e.target.src = 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=80';
                 }}
