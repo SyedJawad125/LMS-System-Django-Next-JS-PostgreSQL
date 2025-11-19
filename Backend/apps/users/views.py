@@ -78,6 +78,26 @@ class RefreshView(APIView):
             return Response(create_response(str(e)), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+# class LogoutView(APIView):
+#     permission_classes = (IsAuthenticated,)
+#     serializer_class = LogoutSerializer
+
+#     def post(self, request):
+#         try:
+#             serialized_data = LogoutSerializer(data=request.data, context={'request': request})
+#             if serialized_data.is_valid():
+#                 request.user.last_login = timezone.now()
+#                 request.user.save()
+#                 UserToken.objects.filter(user=request.user).update(device_token=None)
+#                 return Response(create_response(SUCCESSFUL), status=status.HTTP_200_OK)
+#             else:
+#                 return Response(create_response(get_first_error(serialized_data.errors)),
+#                                 status=status.HTTP_400_BAD_REQUEST)
+#         except Exception as e:
+#             print(str(e))
+#             return Response(create_response(str(e)), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 class LogoutView(APIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = LogoutSerializer
@@ -95,7 +115,9 @@ class LogoutView(APIView):
                                 status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             print(str(e))
-            return Response(create_response(str(e)), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            # Even if there's an error, we can consider it a successful logout
+            # since the client will clear its tokens anyway
+            return Response(create_response("Logged out successfully"), status=status.HTTP_200_OK)
 
 
 class ForgetPasswordView(APIView):

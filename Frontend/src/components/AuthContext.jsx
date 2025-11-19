@@ -319,41 +319,105 @@ export const AuthProvider = ({ children }) => {
     });
   };
 
+  // const logout = async () => {
+  //   try {
+  //     console.log('Attempting to logout...');
+      
+  //     // Backend expects logout data in the request body
+  //     // Check LogoutSerializer to see what fields are needed
+  //     await AxiosInstance.post('/api/user/v1/logout/', {
+  //       // Add any required fields from LogoutSerializer here if needed
+  //     });
+      
+  //     console.log('Logout API call successful');
+  //   } catch (error) {
+  //     console.error('Logout API error:', error);
+  //   } finally {
+  //     // Clear localStorage and state regardless of API call success
+  //     localStorage.removeItem('access_token');
+  //     localStorage.removeItem('refresh_token');
+  //     localStorage.removeItem('permissions');
+  //     localStorage.removeItem('role');
+  //     localStorage.removeItem('user');
+
+  //     setToken(null);
+  //     setRefreshToken(null);
+  //     setPermissions([]);
+  //     setRole(null);
+  //     setUser(null);
+
+  //     console.log('Logged out and cleared all data.');
+      
+  //     // Redirect to login page
+  //     if (typeof window !== 'undefined') {
+  //       window.location.href = '/Login';
+  //     }
+  //   }
+  // };
+
+
   const logout = async () => {
-    try {
-      console.log('Attempting to logout...');
-      
-      // Backend expects logout data in the request body
-      // Check LogoutSerializer to see what fields are needed
-      await AxiosInstance.post('/api/user/v1/logout/', {
-        // Add any required fields from LogoutSerializer here if needed
-      });
-      
-      console.log('Logout API call successful');
-    } catch (error) {
-      console.error('Logout API error:', error);
-    } finally {
-      // Clear localStorage and state regardless of API call success
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-      localStorage.removeItem('permissions');
-      localStorage.removeItem('role');
-      localStorage.removeItem('user');
-
-      setToken(null);
-      setRefreshToken(null);
-      setPermissions([]);
-      setRole(null);
-      setUser(null);
-
-      console.log('Logged out and cleared all data.');
-      
-      // Redirect to login page
-      if (typeof window !== 'undefined') {
-        window.location.href = '/Login';
-      }
+  try {
+    console.log('Attempting to logout...');
+    
+    const refreshToken = localStorage.getItem('refresh_token');
+    
+    if (!refreshToken) {
+      throw new Error('No refresh token available');
     }
-  };
+    
+    console.log('Sending refresh token to logout endpoint...');
+    
+    const response = await AxiosInstance.post('/api/user/v1/logout/', {
+      refresh_token: refreshToken
+    });
+    
+    console.log('Logout API call successful:', response.data);
+    
+  } catch (error) {
+    // Handle different types of errors gracefully
+    if (error.response) {
+      // Server responded with error status
+      console.error('Logout API error - Status:', error.response.status);
+      console.error('Server response:', error.response.data);
+      
+      if (error.response.status === 400) {
+        const errorData = error.response.data;
+        if (errorData.includes('invalid') || errorData.includes('expired')) {
+          console.log('Token was invalid/expired, but logout proceeding...');
+        }
+      }
+    } else if (error.request) {
+      // Request was made but no response received
+      console.error('No response received from server:', error.message);
+    } else {
+      // Something else happened
+      console.error('Logout error:', error.message);
+    }
+  } finally {
+    // Always execute cleanup
+    console.log('Cleaning up local storage and state...');
+    
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('permissions');
+    localStorage.removeItem('role');
+    localStorage.removeItem('user');
+
+    setToken(null);
+    setRefreshToken(null);
+    setPermissions([]);
+    setRole(null);
+    setUser(null);
+
+    console.log('Successfully logged out and cleared all data.');
+    
+    // Redirect to login page
+    if (typeof window !== 'undefined') {
+      window.location.href = '/Login';
+    }
+  }
+};
 
   // Helper function to check if user has a specific permission
   const hasPermission = (permission) => {
