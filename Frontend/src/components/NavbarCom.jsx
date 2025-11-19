@@ -98,7 +98,7 @@ const NavbarCom = ({ isSticky }) => {
           className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-600 font-serif text-2xl tracking-[0.15em] uppercase hover:scale-105 transition-transform duration-300"
           style={{ fontFamily: "'Playfair Display', 'Georgia', serif" }}
         >
-          <Link href="/">AI Blogs</Link>
+          <Link href="/">AliZay LMS</Link>
         </div>
 
         {/* Nav Links - Centered */}
