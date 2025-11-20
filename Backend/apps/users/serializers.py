@@ -1,3 +1,4 @@
+import re
 from django.db.models import Q
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
@@ -10,7 +11,7 @@ from django.db import transaction
 from utils.enums import *
 from utils.validators import clean_and_validate_mobile
 from django.utils import timezone
-from .models import User, Employee, Role, Permission
+from .models import Parent, Student, Teacher, User, Employee, Role, Permission
 from config.settings import (MAX_LOGIN_ATTEMPTS, SIMPLE_JWT, PASSWORD_MIN_LENGTH)
 from django.contrib.auth.hashers import check_password
 from .utils import validate_password
@@ -231,3 +232,310 @@ class RoleSerializer(serializers.ModelSerializer):
         data['permissions'] = PermissionListingSerializer(instance.permissions.all(), many=True).data if data['permissions'] else []
         return data
 
+
+
+class StudentSerializer(serializers.ModelSerializer):
+    """Full student serializer with validations"""
+    guardian_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Student
+        exclude = ['deleted']
+        read_only_fields = ('created_at', 'updated_at', 'created_by', 'updated_by', 
+                            'admission_date')
+    
+    def get_guardian_count(self, obj):
+        return obj.parents.count()
+    
+    def validate_admission_number(self, value):
+        """Validate admission number"""
+        if not value.strip():
+            raise serializers.ValidationError("Admission number is required")
+        
+        # Check for duplicate admission numbers
+        qs = Student.objects.filter(admission_number__iexact=value.strip(), deleted=False)
+        if self.instance:
+            qs = qs.exclude(id=self.instance.id)
+        
+        if qs.exists():
+            raise serializers.ValidationError(f"Student with admission number '{value}' already exists")
+        
+        return value.strip().upper()
+    
+    def validate_roll_number(self, value):
+        """Validate roll number"""
+        if value:
+            # Check for duplicate roll numbers
+            qs = Student.objects.filter(roll_number__iexact=value.strip(), deleted=False)
+            if self.instance:
+                qs = qs.exclude(id=self.instance.id)
+            
+            if qs.exists():
+                raise serializers.ValidationError(f"Student with roll number '{value}' already exists")
+        
+        return value.strip() if value else value
+    
+    def validate_admission_date(self, value):
+        """Validate admission date"""
+        if value:
+            if value > timezone.now().date():
+                raise serializers.ValidationError("Admission date cannot be in the future")
+        return value
+    
+    def validate(self, attrs):
+        """Cross-field validation"""
+        # Auto-generate admission number if not provided
+        if not attrs.get('admission_number') and not self.instance:
+            current_year = timezone.now().year
+            last_student = Student.objects.filter(
+                admission_date__year=current_year, 
+                deleted=False
+            ).order_by('-admission_number').first()
+            
+            if last_student and last_student.admission_number:
+                try:
+                    # Try to extract and increment the number
+                    last_num = last_student.admission_number
+                    if '-' in last_num:
+                        last_id = int(last_num.split('-')[-1])
+                        new_id = f"ADM-{current_year}-{last_id + 1:04d}"
+                    else:
+                        # If format is different, just append sequence
+                        new_id = f"ADM-{current_year}-0001"
+                except (ValueError, IndexError):
+                    new_id = f"ADM-{current_year}-0001"
+            else:
+                new_id = f"ADM-{current_year}-0001"
+            
+            attrs['admission_number'] = new_id
+        
+        # Set admission date to current date if not provided
+        if not attrs.get('admission_date') and not self.instance:
+            attrs['admission_date'] = timezone.now().date()
+        
+        return attrs
+    
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['created_by'] = instance.created_by.get_full_name() if instance.created_by else None
+        data['updated_by'] = instance.updated_by.get_full_name() if instance.updated_by else None
+        
+        # Add user data if user exists
+        if instance.user:
+            data['user'] = {
+                'id': instance.user.id,
+                'full_name': instance.user.full_name,
+                'email': instance.user.email,
+                'mobile': instance.user.mobile
+            }
+        
+        return data
+
+
+class StudentListingSerializer(serializers.ModelSerializer):
+    """Simplified serializer for student listings"""
+    full_name = serializers.SerializerMethodField()
+    email = serializers.SerializerMethodField()
+    mobile = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Student
+        fields = ['id', 'admission_number', 'roll_number', 'full_name', 'email', 'mobile', 'gender', 'status']
+    
+    def get_full_name(self, obj):
+        """Get full name from user if exists, otherwise from student data"""
+        if obj.user and obj.user.full_name:
+            return obj.user.full_name
+        # If no user linked, you might want to store name in Student model
+        # or return admission number as identifier
+        return f"Student {obj.admission_number}"
+    
+    def get_email(self, obj):
+        """Get email from user if exists"""
+        return obj.user.email if obj.user else None
+    
+    def get_mobile(self, obj):
+        """Get mobile from user if exists"""
+        return obj.user.mobile if obj.user else None
+
+
+class TeacherSerializer(serializers.ModelSerializer):
+    """Full teacher serializer with validations"""
+    
+    class Meta:
+        model = Teacher
+        exclude = ['deleted']
+        read_only_fields = ('created_at', 'updated_at', 'created_by', 'updated_by')
+    
+    def validate_employee_id(self, value):
+        """Validate employee ID"""
+        if not value.strip():
+            raise serializers.ValidationError("Employee ID is required")
+        
+        # Check for duplicate employee IDs
+        qs = Teacher.objects.filter(employee_id__iexact=value.strip(), deleted=False)
+        if self.instance:
+            qs = qs.exclude(id=self.instance.id)
+        
+        if qs.exists():
+            raise serializers.ValidationError(f"Teacher with employee ID '{value}' already exists")
+        
+        return value.strip().upper()
+    
+    def validate_qualification(self, value):
+        """Validate qualification"""
+        if not value.strip():
+            raise serializers.ValidationError("Qualification is required")
+        
+        if len(value) > 255:
+            raise serializers.ValidationError("Qualification cannot exceed 255 characters")
+        return value.strip()
+    
+    def validate_specialization(self, value):
+        """Validate specialization"""
+        if value and len(value) > 255:
+            raise serializers.ValidationError("Specialization cannot exceed 255 characters")
+        return value.strip() if value else value
+    
+    def validate_experience_years(self, value):
+        """Validate experience years"""
+        if value and value < 0:
+            raise serializers.ValidationError("Experience cannot be negative")
+        
+        if value and value > 50:
+            raise serializers.ValidationError("Experience years seem too high")
+        return value
+    
+    def validate_joining_date(self, value):
+        """Validate joining date"""
+        if value:
+            if value > timezone.now().date():
+                raise serializers.ValidationError("Joining date cannot be in the future")
+        return value
+    
+    def validate_salary(self, value):
+        """Validate salary"""
+        if value and value < 0:
+            raise serializers.ValidationError("Salary cannot be negative")
+        return value
+    
+    def validate(self, attrs):
+        """Cross-field validation"""
+        # Auto-generate employee ID if not provided
+        if not attrs.get('employee_id') and not self.instance:
+            current_year = timezone.now().year
+            last_teacher = Teacher.objects.filter(
+                joining_date__year=current_year, 
+                deleted=False
+            ).order_by('-employee_id').first()
+            
+            if last_teacher and last_teacher.employee_id:
+                try:
+                    last_id = int(last_teacher.employee_id.split('-')[-1])
+                    new_id = f"EMP-{current_year}-{last_id + 1:04d}"
+                except (ValueError, IndexError):
+                    new_id = f"EMP-{current_year}-0001"
+            else:
+                new_id = f"EMP-{current_year}-0001"
+            
+            attrs['employee_id'] = new_id
+        
+        # Set joining date to current date if not provided
+        if not attrs.get('joining_date') and not self.instance:
+            attrs['joining_date'] = timezone.now().date()
+        
+        return attrs
+    
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['created_by'] = instance.created_by.get_full_name() if instance.created_by else None
+        data['updated_by'] = instance.updated_by.get_full_name() if instance.updated_by else None
+        
+        # Add user data if user exists
+        if instance.user:
+            data['user'] = {
+                'id': instance.user.id,
+                'full_name': instance.user.full_name,
+                'email': instance.user.email,
+                'mobile': instance.user.mobile
+            }
+        
+        return data
+
+class ParentSerializer(serializers.ModelSerializer):
+    """Full parent serializer with validations"""
+    children_list = serializers.SerializerMethodField()
+    children_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Parent
+        exclude = ['deleted']
+        read_only_fields = ('created_at', 'updated_at', 'created_by', 'updated_by')
+    
+    def get_children_list(self, obj):
+        return StudentListingSerializer(obj.students.filter(deleted=False), many=True).data
+    
+    def get_children_count(self, obj):
+        return obj.students.filter(deleted=False).count()
+    
+    def validate_relation(self, value):
+        """Validate relation"""
+        if not value.strip():
+            raise serializers.ValidationError("Relation is required")
+        
+        valid_relations = ['father', 'mother', 'guardian']
+        if value not in valid_relations:
+            raise serializers.ValidationError(f"Relation must be one of: {', '.join(valid_relations)}")
+        
+        return value.strip()
+    
+    def validate_occupation(self, value):
+        """Validate occupation"""
+        if value and len(value) > 100:
+            raise serializers.ValidationError("Occupation cannot exceed 100 characters")
+        return value.strip() if value else value
+    
+    def validate_annual_income(self, value):
+        """Validate annual income"""
+        if value and value < 0:
+            raise serializers.ValidationError("Annual income cannot be negative")
+        return value
+    
+    def validate_office_address(self, value):
+        """Validate office address"""
+        if value and len(value) > 500:
+            raise serializers.ValidationError("Office address cannot exceed 500 characters")
+        return value.strip() if value else value
+    
+    def validate(self, attrs):
+        """Cross-field validation"""
+        # Validate that students are provided
+        students = attrs.get('students', [])
+        if not students and not self.instance:
+            raise serializers.ValidationError({
+                "students": "At least one student must be associated with the parent"
+            })
+        
+        # Validate maximum number of students per parent
+        if students and len(students) > 10:
+            raise serializers.ValidationError({
+                "students": "A parent cannot be associated with more than 10 students"
+            })
+        
+        return attrs
+    
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['created_by'] = instance.created_by.get_full_name() if instance.created_by else None
+        data['updated_by'] = instance.updated_by.get_full_name() if instance.updated_by else None
+        
+        # Add user data if user exists
+        if instance.user:
+            data['user'] = {
+                'id': instance.user.id,
+                'full_name': instance.user.full_name,
+                'email': instance.user.email,
+                'mobile': instance.user.mobile
+            }
+        
+        return data

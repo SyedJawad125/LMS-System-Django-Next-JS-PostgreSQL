@@ -95,3 +95,18 @@ CREATE_IMAGE_CATEGORY = 'create_image_category'
 READ_IMAGE_CATEGORY = 'read_image_category'
 UPDATE_IMAGE_CATEGORY = 'update_image_category'
 DELETE_IMAGE_CATEGORY = 'delete_image_category'
+
+CREATE_STUDENT = 'create_student'
+READ_STUDENT = 'read_student'
+UPDATE_STUDENT = 'update_student'
+DELETE_STUDENT = 'delete_student'
+
+CREATE_TEACHER = 'create_teacher'
+READ_TEACHER = 'read_teacher'
+UPDATE_TEACHER = 'update_teacher'
+DELETE_TEACHER = 'delete_teacher'
+
+CREATE_PARENT = 'create_parent'
+READ_PARENT = 'read_parent'
+UPDATE_PARENT = 'update_parent'
+DELETE_PARENT = 'delete_parent'

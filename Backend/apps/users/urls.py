@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import (LoginView, RefreshView, LogoutView, ForgetPasswordView, VerifyLinkView, ResetPasswordView,
+from .views import (LoginView, ParentView, RefreshView, LogoutView, ForgetPasswordView, StudentView, TeacherView, VerifyLinkView, ResetPasswordView,
                     PermissionView, EmployeeView, EmployeeToggleView, RoleView, AccountActivateView)
 
 urlpatterns = [
@@ -18,5 +18,9 @@ urlpatterns = [
     path('v1/role/', RoleView.as_view()),
 
     path('v1/account/activate/', AccountActivateView.as_view()),
+
+    path('v1/student/', StudentView.as_view()),
+    path('v1/teacher/', TeacherView.as_view()),
+    path('v1/parent/', ParentView.as_view()),
 
 ]

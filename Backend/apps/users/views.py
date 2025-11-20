@@ -4,8 +4,8 @@ from utils.reusable_functions import (create_response, get_first_error, get_toke
 from rest_framework import status
 from utils.response_messages import *
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from .serializers import (LoginSerializer, LoginUserSerializer, EmptySerializer, LogoutSerializer,
-                          SetPasswordSerializer, PermissionSerializer, EmployeeSerializer,
+from .serializers import (LoginSerializer, LoginUserSerializer, EmptySerializer, LogoutSerializer, ParentSerializer,
+                          SetPasswordSerializer, PermissionSerializer, EmployeeSerializer, StudentSerializer, TeacherSerializer,
                           UserSerializer, RoleSerializer, RoleListingSerializer)
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from config.settings import (SIMPLE_JWT, FRONTEND_BASE_URL, PASSWORD_RESET_VALIDITY, FRONTEND_EMAIL_LINK)
@@ -19,7 +19,7 @@ from utils.base_api import BaseView
 from collections import defaultdict
 from utils.decorator import permission_required
 from utils.permission_enums import *
-from .filters import (EmployeeFilter, RoleFilter)
+from .filters import (EmployeeFilter, ParentFilter, RoleFilter, StudentFilter, TeacherFilter)
 
 
 class LoginView(APIView):
@@ -429,3 +429,69 @@ class AccountActivateView(BaseView):
         except Exception as e:
             print(str(e))
             return Response(create_response(str(e)), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class StudentView(BaseView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = StudentSerializer
+    filterset_class = StudentFilter
+
+    @permission_required([CREATE_STUDENT])
+    def post(self, request):
+        return super().post_(request)
+
+    @permission_required([READ_STUDENT])
+    def get(self, request):
+        return super().get_(request)
+
+    @permission_required([UPDATE_STUDENT])
+    def patch(self, request):
+        return super().patch_(request)
+    
+    @permission_required([DELETE_STUDENT])
+    def delete(self, request):
+        return super().delete_(request)
+    
+
+class TeacherView(BaseView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = TeacherSerializer
+    filterset_class = TeacherFilter
+
+    @permission_required([CREATE_TEACHER])
+    def post(self, request):
+        return super().post_(request)
+
+    @permission_required([READ_TEACHER])
+    def get(self, request):
+        return super().get_(request)
+
+    @permission_required([UPDATE_TEACHER])
+    def patch(self, request):
+        return super().patch_(request)
+    
+    @permission_required([DELETE_TEACHER])
+    def delete(self, request):
+        return super().delete_(request)
+    
+    
+class ParentView(BaseView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ParentSerializer
+    filterset_class = ParentFilter
+
+    @permission_required([CREATE_PARENT])
+    def post(self, request):
+        return super().post_(request)
+
+    @permission_required([READ_PARENT])
+    def get(self, request):
+        return super().get_(request)
+
+    @permission_required([UPDATE_PARENT])
+    def patch(self, request):
+        return super().patch_(request)
+    
+    @permission_required([DELETE_PARENT])
+    def delete(self, request):
+        return super().delete_(request)

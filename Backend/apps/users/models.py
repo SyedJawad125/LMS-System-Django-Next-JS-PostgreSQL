@@ -122,3 +122,70 @@ class Employee(TimeUserStamps):
     )
     user = models.OneToOneField('User', on_delete=models.SET_NULL, related_name="user_employee", null=True, blank=True)
     status = models.CharField(max_length=20, choices=status_choices, default=INVITED)
+
+
+
+class Student(TimeUserStamps):
+    """Student Profile"""
+    GENDER_CHOICES = (
+        ('M', 'Male'),
+        ('F', 'Female'),
+        ('O', 'Other'),
+    )
+    
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='student_profile', null=True, blank=True)
+    admission_number = models.CharField(max_length=50, unique=True)
+    roll_number = models.CharField(max_length=50, blank=True)
+    # academic_year = models.ForeignKey('AcademicYear', on_delete=models.SET_NULL, null=True)
+    # class_enrolled = models.ForeignKey('Class', on_delete=models.SET_NULL, null=True)
+    # section = models.ForeignKey('Section', on_delete=models.SET_NULL, null=True)
+    admission_date = models.DateField()
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
+    nationality = models.CharField(max_length=100, blank=True)
+    religion = models.CharField(max_length=50, blank=True)
+    category = models.CharField(max_length=50, blank=True)  # General, SC, ST, OBC
+    previous_school = models.CharField(max_length=255, blank=True)
+    medical_conditions = models.TextField(blank=True)
+    is_hostel_resident = models.BooleanField(default=False)
+    is_transport_required = models.BooleanField(default=False)
+    status = models.CharField(max_length=20, default='active')  # active, graduated, dropout, transferred
+    
+    class Meta:
+        db_table = 'students'
+        ordering = ['admission_number']
+
+
+class Teacher(TimeUserStamps):
+    """Teacher Profile"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='teacher_profile', null=True, blank=True)
+    employee_id = models.CharField(max_length=50, unique=True)
+    qualification = models.CharField(max_length=255)
+    specialization = models.CharField(max_length=255, blank=True)
+    experience_years = models.IntegerField(default=0)
+    joining_date = models.DateField()
+    designation = models.CharField(max_length=100)
+    # department = models.ForeignKey('Department', on_delete=models.SET_NULL, null=True)
+    salary = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    is_class_teacher = models.BooleanField(default=False)
+    
+    class Meta:
+        db_table = 'teachers'
+
+
+class Parent(TimeUserStamps):
+    """Parent/Guardian Profile"""
+    RELATION_CHOICES = (
+        ('father', 'Father'),
+        ('mother', 'Mother'),
+        ('guardian', 'Guardian'),
+    )
+    
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='parent_profile', null=True, blank=True)
+    students = models.ManyToManyField(Student, related_name='parents')
+    relation = models.CharField(max_length=20, choices=RELATION_CHOICES)
+    occupation = models.CharField(max_length=100, blank=True)
+    annual_income = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    office_address = models.TextField(blank=True)
+    
+    class Meta:
+        db_table = 'parents'

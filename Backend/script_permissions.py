@@ -117,6 +117,36 @@ permissions = [
             description='User can update Image Category'),
     Permission(name='Delete Image Category', code_name='delete_image_category', module_name='Image Category', module_label='Image Category Management',
             description='User can delete Image Category'),
+
+                # ---------- Student ----------
+        Permission(name='Create Student', code_name='create_student', module_name='Student', module_label='Student Management',
+                description='User can create Student'),
+        Permission(name='Read Student', code_name='read_student', module_name='Student', module_label='Student Management',
+                description='User can read Student'),
+        Permission(name='Update Student', code_name='update_student', module_name='Student', module_label='Student Management',
+                description='User can update Student'),
+        Permission(name='Delete Student', code_name='delete_student', module_name='Student', module_label='Student Management',
+                description='User can delete Student'),
+
+        # ---------- Teacher ----------
+        Permission(name='Create Teacher', code_name='create_teacher', module_name='Teacher', module_label='Teacher Management',
+                description='User can create Teacher'),
+        Permission(name='Read Teacher', code_name='read_teacher', module_name='Teacher', module_label='Teacher Management',
+                description='User can read Teacher'),
+        Permission(name='Update Teacher', code_name='update_teacher', module_name='Teacher', module_label='Teacher Management',
+                description='User can update Teacher'),
+        Permission(name='Delete Teacher', code_name='delete_teacher', module_name='Teacher', module_label='Teacher Management',
+                description='User can delete Teacher'),
+
+        # ---------- Parent ----------
+        Permission(name='Create Parent', code_name='create_parent', module_name='Parent', module_label='Parent Management',
+                description='User can create Parent'),
+        Permission(name='Read Parent', code_name='read_parent', module_name='Parent', module_label='Parent Management',
+                description='User can read Parent'),
+        Permission(name='Update Parent', code_name='update_parent', module_name='Parent', module_label='Parent Management',
+                description='User can update Parent'),
+        Permission(name='Delete Parent', code_name='delete_parent', module_name='Parent', module_label='Parent Management',
+                description='User can delete Parent'),
 ]
 
 
