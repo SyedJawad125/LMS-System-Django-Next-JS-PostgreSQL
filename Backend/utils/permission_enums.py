@@ -110,3 +110,33 @@ CREATE_PARENT = 'create_parent'
 READ_PARENT = 'read_parent'
 UPDATE_PARENT = 'update_parent'
 DELETE_PARENT = 'delete_parent'
+
+CREATE_ACADEMIC_YEAR = 'create_academic_year'
+READ_ACADEMIC_YEAR = 'read_academic_year'
+UPDATE_ACADEMIC_YEAR = 'update_academic_year'
+DELETE_ACADEMIC_YEAR = 'delete_academic_year'
+
+CREATE_DEPARTMENT = 'create_department'
+READ_DEPARTMENT = 'read_department'
+UPDATE_DEPARTMENT = 'update_department'
+DELETE_DEPARTMENT = 'delete_department'
+
+CREATE_CLASS = 'create_class'
+READ_CLASS = 'read_class'
+UPDATE_CLASS = 'update_class'
+DELETE_CLASS = 'delete_class'
+
+CREATE_SECTION = 'create_section'
+READ_SECTION = 'read_section'
+UPDATE_SECTION = 'update_section'
+DELETE_SECTION = 'delete_section'
+
+CREATE_SUBJECT = 'create_subject'
+READ_SUBJECT = 'read_subject'
+UPDATE_SUBJECT = 'update_subject'
+DELETE_SUBJECT = 'delete_subject'
+
+CREATE_CLASS_SUBJECT = 'create_class_subject'
+READ_CLASS_SUBJECT = 'read_class_subject'
+UPDATE_CLASS_SUBJECT = 'update_class_subject'
+DELETE_CLASS_SUBJECT = 'delete_class_subject'

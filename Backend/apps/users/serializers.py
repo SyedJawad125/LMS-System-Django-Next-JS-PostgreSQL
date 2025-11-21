@@ -824,6 +824,66 @@ class StudentSerializer(serializers.ModelSerializer):
         return data
 
 
+class TeacherListingSerializer(serializers.ModelSerializer):
+    """Minimal serializer for teacher listings in dropdowns/references"""
+    user_name = serializers.SerializerMethodField()
+    user_email = serializers.SerializerMethodField()
+    user_mobile = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Teacher
+        fields = [
+            'id', 
+            'employee_id', 
+            'user_name',
+            'user_email',
+            'user_mobile',
+            'designation',
+            'qualification',
+            'specialization',
+            'experience_years',
+            'is_class_teacher'
+        ]
+    
+    def get_user_name(self, obj):
+        """Get user's full name"""
+        if obj.user and not obj.user.deleted:
+            return obj.user.get_full_name()
+        return None
+    
+    def get_user_email(self, obj):
+        """Get user's email"""
+        if obj.user and not obj.user.deleted:
+            return obj.user.email
+        return None
+    
+    def get_user_mobile(self, obj):
+        """Get user's mobile"""
+        if obj.user and not obj.user.deleted:
+            return obj.user.mobile
+        return None
+    
+    def to_representation(self, instance):
+        """Custom representation for listing"""
+        # Handle soft-deleted instances
+        if instance.deleted:
+            return {
+                'id': instance.id,
+                'employee_id': instance.employee_id,
+                'user_name': 'Deleted Teacher',
+                'message': f'Teacher "{instance.employee_id}" has been deleted'
+            }
+        
+        data = super().to_representation(instance)
+        
+        # Format for better display in dropdowns
+        if data['user_name']:
+            data['display_name'] = f"{data['user_name']} ({data['employee_id']}) - {data['designation']}"
+        else:
+            data['display_name'] = f"{data['employee_id']} - {data['designation']}"
+        
+        return data
+
 class TeacherSerializer(serializers.ModelSerializer):
     """Full teacher serializer with user linking"""
     user_id = serializers.IntegerField(write_only=True, required=False, allow_null=True)

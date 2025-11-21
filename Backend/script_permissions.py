@@ -147,6 +147,42 @@ permissions = [
                 description='User can update Parent'),
         Permission(name='Delete Parent', code_name='delete_parent', module_name='Parent', module_label='Parent Management',
                 description='User can delete Parent'),
+
+        # ---------- AcademicYear ----------
+        Permission(name='Create Academic Year', code_name='create_academicyear', module_name='AcademicYear', module_label='Academic Year Management', description='User can create Academic Year'),
+        Permission(name='Read Academic Year', code_name='read_academicyear', module_name='AcademicYear', module_label='Academic Year Management', description='User can read Academic Year'),
+        Permission(name='Update Academic Year', code_name='update_academicyear', module_name='AcademicYear', module_label='Academic Year Management', description='User can update Academic Year'),
+        Permission(name='Delete Academic Year', code_name='delete_academicyear', module_name='AcademicYear', module_label='Academic Year Management', description='User can delete Academic Year'),
+
+        # ---------- Department ----------
+        Permission(name='Create Department', code_name='create_department', module_name='Department', module_label='Department Management', description='User can create Department'),
+        Permission(name='Read Department', code_name='read_department', module_name='Department', module_label='Department Management', description='User can read Department'),
+        Permission(name='Update Department', code_name='update_department', module_name='Department', module_label='Department Management', description='User can update Department'),
+        Permission(name='Delete Department', code_name='delete_department', module_name='Department', module_label='Department Management', description='User can delete Department'),
+
+        # ---------- Class ----------
+        Permission(name='Create Class', code_name='create_class', module_name='Class', module_label='Class Management', description='User can create Class'),
+        Permission(name='Read Class', code_name='read_class', module_name='Class', module_label='Class Management', description='User can read Class'),
+        Permission(name='Update Class', code_name='update_class', module_name='Class', module_label='Class Management', description='User can update Class'),
+        Permission(name='Delete Class', code_name='delete_class', module_name='Class', module_label='Class Management', description='User can delete Class'),
+
+        # ---------- Section ----------
+        Permission(name='Create Section', code_name='create_section', module_name='Section', module_label='Section Management', description='User can create Section'),
+        Permission(name='Read Section', code_name='read_section', module_name='Section', module_label='Section Management', description='User can read Section'),
+        Permission(name='Update Section', code_name='update_section', module_name='Section', module_label='Section Management', description='User can update Section'),
+        Permission(name='Delete Section', code_name='delete_section', module_name='Section', module_label='Section Management', description='User can delete Section'),
+
+        # ---------- Subject ----------
+        Permission(name='Create Subject', code_name='create_subject', module_name='Subject', module_label='Subject Management', description='User can create Subject'),
+        Permission(name='Read Subject', code_name='read_subject', module_name='Subject', module_label='Subject Management', description='User can read Subject'),
+        Permission(name='Update Subject', code_name='update_subject', module_name='Subject', module_label='Subject Management', description='User can update Subject'),
+        Permission(name='Delete Subject', code_name='delete_subject', module_name='Subject', module_label='Subject Management', description='User can delete Subject'),
+
+        # ---------- ClassSubject ----------
+        Permission(name='Create Class Subject', code_name='create_classsubject', module_name='ClassSubject', module_label='Class Subject Management', description='User can create Class Subject'),
+        Permission(name='Read Class Subject', code_name='read_classsubject', module_name='ClassSubject', module_label='Class Subject Management', description='User can read Class Subject'),
+        Permission(name='Update Class Subject', code_name='update_classsubject', module_name='ClassSubject', module_label='Class Subject Management', description='User can update Class Subject'),
+        Permission(name='Delete Class Subject', code_name='delete_classsubject', module_name='ClassSubject', module_label='Class Subject Management', description='User can delete Class Subject'),
 ]
 
 

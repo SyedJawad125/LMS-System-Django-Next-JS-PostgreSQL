@@ -136,6 +136,14 @@ class Student(TimeUserStamps):
         ('O', 'Other'),
     )
     
+    STATUS_CHOICES = (
+        ('active', 'Active'),
+        ('graduated', 'Graduated'),
+        ('dropout', 'Dropout'),
+        ('transferred', 'Transferred'),
+        ('inactive', 'Inactive'),
+    )
+    
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='student_profile', null=True, blank=True)
     admission_number = models.CharField(max_length=50, unique=True)
     roll_number = models.CharField(max_length=50, blank=True)
@@ -151,12 +159,14 @@ class Student(TimeUserStamps):
     medical_conditions = models.TextField(blank=True)
     is_hostel_resident = models.BooleanField(default=False)
     is_transport_required = models.BooleanField(default=False)
-    status = models.CharField(max_length=20, default='active')  # active, graduated, dropout, transferred
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
     
     class Meta:
         db_table = 'students'
         ordering = ['admission_number']
-
+    
+    def __str__(self):
+        return f"{self.admission_number} - {self.user.get_full_name() if self.user else 'No User'}"
 
 class Teacher(TimeUserStamps):
     """Teacher Profile"""

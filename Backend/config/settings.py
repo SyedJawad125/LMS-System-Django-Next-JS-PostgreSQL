@@ -90,6 +90,7 @@ INSTALLED_APPS = [
     # 'apps.myapp',
     'apps.notification',
     'apps.images',
+    'apps.academic',
 
     "drf_spectacular",
     "drf_spectacular_sidecar",
