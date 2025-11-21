@@ -34,9 +34,12 @@ def get_profile_image_path(self, filename):
 
 class User(AbstractBaseUser, TimeStamps):
     type_choices = (
-        (CUSTOMER, CUSTOMER),
-        (EMPLOYEE, EMPLOYEE),
-    )
+    (CUSTOMER, CUSTOMER),
+    (EMPLOYEE, EMPLOYEE),
+    (STUDENT, STUDENT),
+    (TEACHER, TEACHER),
+    (PARENT, PARENT),
+)
     username = models.CharField(max_length=100, unique=True)
     first_name = models.CharField(max_length=100, validators=[val_name])
     last_name = models.CharField(max_length=100, validators=[val_name])

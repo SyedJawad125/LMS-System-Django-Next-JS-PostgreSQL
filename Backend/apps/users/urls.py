@@ -1,11 +1,12 @@
 from django.urls import path
-from .views import (LoginView, ParentView, RefreshView, LogoutView, ForgetPasswordView, StudentView, TeacherView, VerifyLinkView, ResetPasswordView,
+from .views import (LoginView, ParentView, RefreshView, LogoutView, ForgetPasswordView, RegisterView, StudentView, TeacherView, VerifyLinkView, ResetPasswordView,
                     PermissionView, EmployeeView, EmployeeToggleView, RoleView, AccountActivateView)
 
 urlpatterns = [
     path('v1/login/', LoginView.as_view()),
     path('v1/refresh/', RefreshView.as_view()),
     path('v1/logout/', LogoutView.as_view()),
+    path('v1/register/', RegisterView.as_view()),
 
     path('v1/forget/password/', ForgetPasswordView.as_view()),
     path('v1/verify/link/', VerifyLinkView.as_view()),
@@ -23,4 +24,11 @@ urlpatterns = [
     path('v1/teacher/', TeacherView.as_view()),
     path('v1/parent/', ParentView.as_view()),
 
+
+
+
 ]
+
+
+
+

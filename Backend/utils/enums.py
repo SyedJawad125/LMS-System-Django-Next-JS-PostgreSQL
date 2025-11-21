@@ -251,3 +251,7 @@ IMAGE_EXTS = (".jpg", ".jpeg", ".png", ".webp")
 
 ### Timezone ###
 UTC = "UTC"
+
+STUDENT = 'student'
+TEACHER = 'teacher'
+PARENT = 'parent'

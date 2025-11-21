@@ -4,7 +4,7 @@ from utils.reusable_functions import (create_response, get_first_error, get_toke
 from rest_framework import status
 from utils.response_messages import *
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from .serializers import (LoginSerializer, LoginUserSerializer, EmptySerializer, LogoutSerializer, ParentSerializer,
+from .serializers import (LoginSerializer, LoginUserSerializer, EmptySerializer, LogoutSerializer, ParentSerializer, RegisterSerializer,
                           SetPasswordSerializer, PermissionSerializer, EmployeeSerializer, StudentSerializer, TeacherSerializer,
                           UserSerializer, RoleSerializer, RoleListingSerializer)
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
@@ -430,6 +430,89 @@ class AccountActivateView(BaseView):
             print(str(e))
             return Response(create_response(str(e)), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+class RegisterView(APIView):
+    authentication_classes = ()
+    permission_classes = (AllowAny,)
+    serializer_class = RegisterSerializer
+
+    def post(self, request):
+        try:
+            serialized_data = self.serializer_class(
+                data=request.data,
+                context={'request': request}
+            )
+            if serialized_data.is_valid():
+                with transaction.atomic():
+                    user = serialized_data.save()
+                    resp_data = serialized_data.to_representation(user)
+                    return Response(
+                        create_response(SUCCESSFUL, resp_data),
+                        status=status.HTTP_201_CREATED
+                    )
+            else:
+                return Response(
+                    create_response(get_first_error(serialized_data.errors)),
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except Exception as e:
+            print(str(e))
+            return Response(
+                create_response(str(e)),
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        
+# class RegisterView(APIView):
+#     authentication_classes = ()
+#     permission_classes = (AllowAny,)
+#     serializer_class = RegisterSerializer
+
+#     def post(self, request):
+#         try:
+#             serialized_data = self.serializer_class(
+#                 data=request.data,
+#                 context={'request': request}
+#             )
+#             if serialized_data.is_valid():
+#                 with transaction.atomic():
+#                     user = serialized_data.save()
+#                     self.send_activation_email(user)
+#                     resp_data = serialized_data.to_representation(user)
+#                     return Response(
+#                         create_response(SUCCESSFUL, resp_data),
+#                         status=status.HTTP_201_CREATED
+#                     )
+#             else:
+#                 return Response(
+#                     create_response(get_first_error(serialized_data.errors)),
+#                     status=status.HTTP_400_BAD_REQUEST
+#                 )
+#         except Exception as e:
+#             print(str(e))
+#             return Response(
+#                 create_response(str(e)),
+#                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
+#             )
+
+#     def send_activation_email(self, user):
+#         # Use your existing email sending logic similar to ForgetPasswordView
+#         url = f"{FRONTEND_EMAIL_LINK}/{str(user.activation_link_token)}"
+#         send_email.delay(
+#             'ACTIVATION_EMAIL_TEMPLATE',  # Replace with your actual template name
+#             [user.email], 
+#             {
+#                 "full_name": user.full_name, 
+#                 "url": url,
+#                 "validity": "24 hours"  # You can define this constant if needed
+#             }
+#         )
+    # @staticmethod
+    # def send_activation_email(user):
+    #     url = f"{FRONTEND_EMAIL_LINK}/{user.activation_link_token}"
+    #     context = {
+    #         "full_name": user.full_name,
+    #         "url": url,
+    #     }
+    #     send_email.delay(USER_REGISTRATION_EMAIL_TEMP, [user.email], context)
 
 class StudentView(BaseView):
     permission_classes = (IsAuthenticated,)
