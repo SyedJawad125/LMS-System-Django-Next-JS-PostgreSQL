@@ -149,10 +149,10 @@ permissions = [
                 description='User can delete Parent'),
 
         # ---------- AcademicYear ----------
-        Permission(name='Create Academic Year', code_name='create_academicyear', module_name='AcademicYear', module_label='Academic Year Management', description='User can create Academic Year'),
-        Permission(name='Read Academic Year', code_name='read_academicyear', module_name='AcademicYear', module_label='Academic Year Management', description='User can read Academic Year'),
-        Permission(name='Update Academic Year', code_name='update_academicyear', module_name='AcademicYear', module_label='Academic Year Management', description='User can update Academic Year'),
-        Permission(name='Delete Academic Year', code_name='delete_academicyear', module_name='AcademicYear', module_label='Academic Year Management', description='User can delete Academic Year'),
+        Permission(name='Create Academic Year', code_name='create_academic_year', module_name='AcademicYear', module_label='Academic Year Management', description='User can create Academic Year'),
+        Permission(name='Read Academic Year', code_name='read_academic_year', module_name='AcademicYear', module_label='Academic Year Management', description='User can read Academic Year'),
+        Permission(name='Update Academic Year', code_name='update_academic_year', module_name='AcademicYear', module_label='Academic Year Management', description='User can update Academic Year'),
+        Permission(name='Delete Academic Year', code_name='delete_academic_year', module_name='AcademicYear', module_label='Academic Year Management', description='User can delete Academic Year'),
 
         # ---------- Department ----------
         Permission(name='Create Department', code_name='create_department', module_name='Department', module_label='Department Management', description='User can create Department'),

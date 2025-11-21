@@ -5,7 +5,6 @@ from utils.reusable_classes import TimeUserStamps
 # Create your models here.
 
 
-
 class AcademicYear(TimeUserStamps):
     """Academic Year Management"""
     name = models.CharField(max_length=50, unique=True)  # e.g., "2023-2024"
