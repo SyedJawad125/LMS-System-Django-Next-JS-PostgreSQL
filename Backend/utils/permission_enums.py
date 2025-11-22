@@ -140,3 +140,27 @@ CREATE_CLASS_SUBJECT = 'create_classsubject'
 READ_CLASS_SUBJECT = 'read_classsubject'
 UPDATE_CLASS_SUBJECT = 'update_classsubject'
 DELETE_CLASS_SUBJECT = 'delete_classsubject'
+
+# DailyAttendance Permissions
+CREATE_DAILY_ATTENDANCE = 'create_daily_attendance'
+READ_DAILY_ATTENDANCE = 'read_daily_attendance'
+UPDATE_DAILY_ATTENDANCE = 'update_daily_attendance'
+DELETE_DAILY_ATTENDANCE = 'delete_daily_attendance'
+
+# MonthlyAttendanceReport Permissions
+CREATE_MONTHLY_ATTENDANCE_REPORT = 'create_monthly_attendance_report'
+READ_MONTHLY_ATTENDANCE_REPORT = 'read_monthly_attendance_report'
+UPDATE_MONTHLY_ATTENDANCE_REPORT = 'update_monthly_attendance_report'
+DELETE_MONTHLY_ATTENDANCE_REPORT = 'delete_monthly_attendance_report'
+
+# AttendanceConfiguration Permissions
+CREATE_ATTENDANCE_CONFIGURATION = 'create_attendance_configuration'
+READ_ATTENDANCE_CONFIGURATION = 'read_attendance_configuration'
+UPDATE_ATTENDANCE_CONFIGURATION = 'update_attendance_configuration'
+DELETE_ATTENDANCE_CONFIGURATION = 'delete_attendance_configuration'
+
+# AttendanceSummary Permissions
+CREATE_ATTENDANCE_SUMMARY = 'create_attendance_summary'
+READ_ATTENDANCE_SUMMARY = 'read_attendance_summary'
+UPDATE_ATTENDANCE_SUMMARY = 'update_attendance_summary'
+DELETE_ATTENDANCE_SUMMARY = 'delete_attendance_summary'

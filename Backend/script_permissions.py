@@ -183,6 +183,30 @@ permissions = [
         Permission(name='Read Class Subject', code_name='read_classsubject', module_name='ClassSubject', module_label='Class Subject Management', description='User can read Class Subject'),
         Permission(name='Update Class Subject', code_name='update_classsubject', module_name='ClassSubject', module_label='Class Subject Management', description='User can update Class Subject'),
         Permission(name='Delete Class Subject', code_name='delete_classsubject', module_name='ClassSubject', module_label='Class Subject Management', description='User can delete Class Subject'),
+
+        # ---------- DailyAttendance ----------
+        Permission(name='Create Daily Attendance', code_name='create_daily_attendance', module_name='DailyAttendance', module_label='Daily Attendance Management', description='User can create Daily Attendance'),
+        Permission(name='Read Daily Attendance', code_name='read_daily_attendance', module_name='DailyAttendance', module_label='Daily Attendance Management', description='User can read Daily Attendance'),
+        Permission(name='Update Daily Attendance', code_name='update_daily_attendance', module_name='DailyAttendance', module_label='Daily Attendance Management', description='User can update Daily Attendance'),
+        Permission(name='Delete Daily Attendance', code_name='delete_daily_attendance', module_name='DailyAttendance', module_label='Daily Attendance Management', description='User can delete Daily Attendance'),
+
+        # ---------- MonthlyAttendanceReport ----------
+        Permission(name='Create Monthly Attendance Report', code_name='create_monthly_attendance_report', module_name='MonthlyAttendanceReport', module_label='Monthly Attendance Report Management', description='User can create Monthly Attendance Report'),
+        Permission(name='Read Monthly Attendance Report', code_name='read_monthly_attendance_report', module_name='MonthlyAttendanceReport', module_label='Monthly Attendance Report Management', description='User can read Monthly Attendance Report'),
+        Permission(name='Update Monthly Attendance Report', code_name='update_monthly_attendance_report', module_name='MonthlyAttendanceReport', module_label='Monthly Attendance Report Management', description='User can update Monthly Attendance Report'),
+        Permission(name='Delete Monthly Attendance Report', code_name='delete_monthly_attendance_report', module_name='MonthlyAttendanceReport', module_label='Monthly Attendance Report Management', description='User can delete Monthly Attendance Report'),
+
+        # ---------- AttendanceConfiguration ----------
+        Permission(name='Create Attendance Configuration', code_name='create_attendance_configuration', module_name='AttendanceConfiguration', module_label='Attendance Configuration Management', description='User can create Attendance Configuration'),
+        Permission(name='Read Attendance Configuration', code_name='read_attendance_configuration', module_name='AttendanceConfiguration', module_label='Attendance Configuration Management', description='User can read Attendance Configuration'),
+        Permission(name='Update Attendance Configuration', code_name='update_attendance_configuration', module_name='AttendanceConfiguration', module_label='Attendance Configuration Management', description='User can update Attendance Configuration'),
+        Permission(name='Delete Attendance Configuration', code_name='delete_attendance_configuration', module_name='AttendanceConfiguration', module_label='Attendance Configuration Management', description='User can delete Attendance Configuration'),
+
+        # ---------- AttendanceSummary ----------
+        Permission(name='Create Attendance Summary', code_name='create_attendance_summary', module_name='AttendanceSummary', module_label='Attendance Summary Management', description='User can create Attendance Summary'),
+        Permission(name='Read Attendance Summary', code_name='read_attendance_summary', module_name='AttendanceSummary', module_label='Attendance Summary Management', description='User can read Attendance Summary'),
+        Permission(name='Update Attendance Summary', code_name='update_attendance_summary', module_name='AttendanceSummary', module_label='Attendance Summary Management', description='User can update Attendance Summary'),
+        Permission(name='Delete Attendance Summary', code_name='delete_attendance_summary', module_name='AttendanceSummary', module_label='Attendance Summary Management', description='User can delete Attendance Summary'),
 ]
 
 
