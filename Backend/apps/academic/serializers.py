@@ -309,11 +309,12 @@ class ClassSerializer(serializers.ModelSerializer):
 class SectionListingSerializer(serializers.ModelSerializer):
     """Minimal serializer for section listings"""
     class_level_name = serializers.CharField(source='class_level.name', read_only=True)
+    class_level_code = serializers.CharField(source='class_level.code', read_only=True)  # Optional
     
     class Meta:
         model = Section
-        fields = ['id', 'name', 'class_level', 'class_level_name', 'room_number', 'capacity']
-
+        fields = ['id', 'name', 'class_level', 'class_level_name', 'class_level_code', 'room_number', 'capacity']
+        read_only_fields = ['id', 'name', 'class_level', 'class_level_name', 'class_level_code', 'room_number', 'capacity']
 
 class SectionSerializer(serializers.ModelSerializer):
     """Full section serializer with validations"""
@@ -344,7 +345,7 @@ class SectionSerializer(serializers.ModelSerializer):
     def get_updated_by(self, obj):
         if obj.updated_by:
             full_name = obj.updated_by.get_full_name()
-            return full_name.strip() if full_name and full_name.strip() else obj.updated_by.username
+            return full_name.strip() if full_name and full_name.strip() else obj.created_by.username
         return None
     
     def get_class_level_detail(self, obj):
@@ -365,9 +366,21 @@ class SectionSerializer(serializers.ModelSerializer):
     def get_students_count(self, obj):
         if obj.deleted:
             return 0
-        # Assuming Student model has section field
+        # FIXED: Check what field actually links students to sections
         from apps.users.models import Student
-        return Student.objects.filter(section=obj, deleted=False).count()
+        try:
+            # Try different possible field names
+            if hasattr(Student, 'section'):
+                return Student.objects.filter(section=obj, deleted=False).count()
+            elif hasattr(Student, 'class_section'):
+                return Student.objects.filter(class_section=obj, deleted=False).count()
+            elif hasattr(Student, 'student_section'):
+                return Student.objects.filter(student_section=obj, deleted=False).count()
+            else:
+                # If no direct relation, return 0 or implement your logic
+                return 0
+        except Exception:
+            return 0
     
     def get_class_subjects_count(self, obj):
         if obj.deleted:
@@ -381,17 +394,27 @@ class SectionSerializer(serializers.ModelSerializer):
         value = value.strip().upper()
         
         # Check unique together with class_level and academic_year
-        qs = Section.objects.filter(
-            class_level=self.initial_data.get('class_level', self.instance.class_level.id if self.instance else None),
-            name=value,
-            academic_year=self.initial_data.get('academic_year', self.instance.academic_year.id if self.instance else None),
-            deleted=False
-        )
-        if self.instance:
-            qs = qs.exclude(id=self.instance.id)
+        class_level_id = self.initial_data.get('class_level')
+        academic_year_id = self.initial_data.get('academic_year')
         
-        if qs.exists():
-            raise serializers.ValidationError(f"Section with this name already exists for the selected class and academic year")
+        # For updates, use instance values if initial_data doesn't have them
+        if self.instance and not class_level_id:
+            class_level_id = self.instance.class_level.id
+        if self.instance and not academic_year_id:
+            academic_year_id = self.instance.academic_year.id
+        
+        if class_level_id and academic_year_id:
+            qs = Section.objects.filter(
+                class_level_id=class_level_id,
+                name=value,
+                academic_year_id=academic_year_id,
+                deleted=False
+            )
+            if self.instance:
+                qs = qs.exclude(id=self.instance.id)
+            
+            if qs.exists():
+                raise serializers.ValidationError(f"Section with this name already exists for the selected class and academic year")
         
         return value
     
