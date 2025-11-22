@@ -6,7 +6,7 @@ from .models import (
     AttendanceConfiguration, AttendanceSummary, AttendanceStatus
 )
 from apps.users.serializers import TeacherListingSerializer
-from apps.academics.serializers import SectionListingSerializer, SubjectListingSerializer
+from apps.academic.serializers import SectionListingSerializer, SubjectListingSerializer
 
 
 # ======================= DAILY ATTENDANCE SERIALIZERS =======================
@@ -43,7 +43,7 @@ class DailyAttendanceListingSerializer(serializers.ModelSerializer):
 
 
 class DailyAttendanceSerializer(serializers.ModelSerializer):
-    """Full daily attendance serializer with validations"""
+    """Full daily attendance serializer with validations - AUTO DATE"""
     created_by = serializers.SerializerMethodField()
     updated_by = serializers.SerializerMethodField()
     student_detail = serializers.SerializerMethodField()
@@ -58,7 +58,7 @@ class DailyAttendanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = DailyAttendance
         fields = [
-            'id', 'student', 'student_detail', 'date', 'status', 'status_display',
+            'id', 'student', 'student_detail', 'date', 'status', 'status_display',  # date is read-only now
             'subject', 'subject_detail', 'section', 'section_detail',
             'marked_by', 'marked_by_detail', 'remarks',
             'check_in_time', 'check_out_time', 'attendance_duration_display',
@@ -66,7 +66,7 @@ class DailyAttendanceSerializer(serializers.ModelSerializer):
             'is_on_time', 'created_by', 'updated_by', 'created_at', 'updated_at'
         ]
         read_only_fields = (
-            'created_at', 'updated_at', 'created_by', 'updated_by',
+            'date', 'created_at', 'updated_at', 'created_by', 'updated_by',  # date added to read_only
             'verified_at', 'attendance_duration_display', 'is_on_time'
         )
     
@@ -130,12 +130,6 @@ class DailyAttendanceSerializer(serializers.ModelSerializer):
                 return obj.check_in_time <= school_start_time
         return obj.status != AttendanceStatus.LATE
     
-    def validate_date(self, value):
-        """Validate that date is not in the future"""
-        if value > timezone.now().date():
-            raise serializers.ValidationError("Attendance date cannot be in the future.")
-        return value
-    
     def validate_status(self, value):
         """Validate status is a valid choice"""
         valid_statuses = [choice[0] for choice in AttendanceStatus.choices]
@@ -186,13 +180,15 @@ class DailyAttendanceSerializer(serializers.ModelSerializer):
         
         # Validate unique together constraint (exclude soft deleted records)
         student = attrs.get('student', self.instance.student if self.instance else None)
-        date = attrs.get('date', self.instance.date if self.instance else None)
         subject = attrs.get('subject', self.instance.subject if self.instance else None)
         
-        if student and date:
+        if student:
+            # Auto-date will be set in create method, so use current date for validation
+            current_date = timezone.now().date()
+            
             qs = DailyAttendance.objects.filter(
                 student=student,
-                date=date,
+                date=current_date,  # Use current date for validation
                 subject=subject,
                 deleted=False
             )
@@ -201,15 +197,20 @@ class DailyAttendanceSerializer(serializers.ModelSerializer):
             
             if qs.exists():
                 raise serializers.ValidationError(
-                    "Attendance for this student on this date and subject already exists."
+                    "Attendance for this student on today's date and subject already exists."
                 )
         
         return attrs
     
     def create(self, validated_data):
-        """Auto-populate section from student if not provided"""
+        """Auto-populate date and section"""
+        # Auto-set current date
+        validated_data['date'] = timezone.now().date()
+        
+        # Auto-populate section from student if not provided
         if 'section' not in validated_data and 'student' in validated_data:
             validated_data['section'] = validated_data['student'].section
+            
         return super().create(validated_data)
     
     def update(self, instance, validated_data):
@@ -752,7 +753,7 @@ class BulkAttendanceSerializer(serializers.Serializer):
         return value
     
     def validate_section(self, value):
-        from apps.academics.models import Section
+        from apps.academic.models import Section
         try:
             section = Section.objects.get(id=value, deleted=False)
             return section
@@ -762,7 +763,7 @@ class BulkAttendanceSerializer(serializers.Serializer):
     def validate_subject(self, value):
         if value is None:
             return None
-        from apps.academics.models import Subject
+        from apps.academic.models import Subject
         try:
             subject = Subject.objects.get(id=value, deleted=False)
             return subject

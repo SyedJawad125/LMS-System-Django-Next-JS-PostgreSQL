@@ -91,6 +91,7 @@ INSTALLED_APPS = [
     'apps.notification',
     'apps.images',
     'apps.academic',
+    'apps.attendance',
 
     "drf_spectacular",
     "drf_spectacular_sidecar",

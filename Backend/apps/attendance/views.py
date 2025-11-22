@@ -17,19 +17,19 @@ class DailyAttendanceView(BaseView):
     serializer_class = DailyAttendanceSerializer
     filterset_class = DailyAttendanceFilter
 
-    @permission_required([CREATE_ATTENDANCE])
+    @permission_required([CREATE_DAILY_ATTENDANCE])
     def post(self, request):
         return super().post_(request)
 
-    @permission_required([READ_ATTENDANCE])
+    @permission_required([READ_DAILY_ATTENDANCE])
     def get(self, request):
         return super().get_(request)
 
-    @permission_required([UPDATE_ATTENDANCE])
+    @permission_required([UPDATE_DAILY_ATTENDANCE])
     def patch(self, request):
         return super().patch_(request)
     
-    @permission_required([DELETE_ATTENDANCE])
+    @permission_required([DELETE_DAILY_ATTENDANCE])
     def delete(self, request):
         return super().delete_(request)
 
@@ -39,19 +39,19 @@ class MonthlyAttendanceReportView(BaseView):
     serializer_class = MonthlyAttendanceReportSerializer
     filterset_class = MonthlyAttendanceReportFilter
 
-    @permission_required([CREATE_ATTENDANCE_REPORT])
+    @permission_required([CREATE_MONTHLY_ATTENDANCE_REPORT])
     def post(self, request):
         return super().post_(request)
 
-    @permission_required([READ_ATTENDANCE_REPORT])
+    @permission_required([READ_MONTHLY_ATTENDANCE_REPORT])
     def get(self, request):
         return super().get_(request)
 
-    @permission_required([UPDATE_ATTENDANCE_REPORT])
+    @permission_required([UPDATE_MONTHLY_ATTENDANCE_REPORT])
     def patch(self, request):
         return super().patch_(request)
     
-    @permission_required([DELETE_ATTENDANCE_REPORT])
+    @permission_required([DELETE_MONTHLY_ATTENDANCE_REPORT])
     def delete(self, request):
         return super().delete_(request)
 
@@ -61,19 +61,19 @@ class AttendanceConfigurationView(BaseView):
     serializer_class = AttendanceConfigurationSerializer
     filterset_class = AttendanceConfigurationFilter
 
-    @permission_required([CREATE_ATTENDANCE_CONFIG])
+    @permission_required([CREATE_ATTENDANCE_CONFIGURATION])
     def post(self, request):
         return super().post_(request)
 
-    @permission_required([READ_ATTENDANCE_CONFIG])
+    @permission_required([READ_ATTENDANCE_CONFIGURATION])
     def get(self, request):
         return super().get_(request)
 
-    @permission_required([UPDATE_ATTENDANCE_CONFIG])
+    @permission_required([UPDATE_ATTENDANCE_CONFIGURATION])
     def patch(self, request):
         return super().patch_(request)
     
-    @permission_required([DELETE_ATTENDANCE_CONFIG])
+    @permission_required([DELETE_ATTENDANCE_CONFIGURATION])
     def delete(self, request):
         return super().delete_(request)
 

@@ -20,7 +20,7 @@ class DailyAttendance(TimeUserStamps):
     """Daily Attendance Records - Simplified (validation moved to serializer)"""
     
     student = models.ForeignKey(
-        'Student', 
+        'users.Student',  # ✅ CORRECT - uses 'users' app
         on_delete=models.CASCADE, 
         related_name='daily_attendances',
         db_index=True
@@ -32,19 +32,19 @@ class DailyAttendance(TimeUserStamps):
         db_index=True
     )
     subject = models.ForeignKey(
-        'Subject', 
+        'academic.Subject',  # ✅ CORRECT - uses 'academic' app (singular)
         on_delete=models.SET_NULL, 
         null=True, 
         blank=True,
         db_index=True
     )
     section = models.ForeignKey(
-        'Section', 
+        'academic.Section',  # ✅ CORRECT - uses 'academic' app (singular)
         on_delete=models.CASCADE,
         db_index=True
     )
     marked_by = models.ForeignKey(
-        'Teacher', 
+        'users.Teacher',  # ✅ CORRECT - uses 'users' app
         on_delete=models.SET_NULL, 
         null=True,
         related_name='marked_attendances'
@@ -58,7 +58,7 @@ class DailyAttendance(TimeUserStamps):
     # For verification
     is_verified = models.BooleanField(default=False)
     verified_by = models.ForeignKey(
-        'Teacher', 
+        'users.Teacher',  # ✅ CORRECT - uses 'users' app
         on_delete=models.SET_NULL, 
         null=True, 
         blank=True,
@@ -81,17 +81,12 @@ class DailyAttendance(TimeUserStamps):
     def __str__(self):
         return f"{self.student} - {self.date} - {self.get_status_display()}"
 
-    # REMOVED: clean() method - validation moved to serializer
-    # REMOVED: save() method with auto-population - moved to serializer
-    # REMOVED: is_on_time property - moved to serializer
-    # REMOVED: attendance_duration property - moved to serializer
-
 
 class MonthlyAttendanceReport(TimeUserStamps):
     """Monthly Attendance Summary - Simplified (calculations moved to serializer)"""
     
     student = models.ForeignKey(
-        'Student', 
+        'users.Student',  # ✅ CORRECT - uses 'users' app
         on_delete=models.CASCADE,
         related_name='monthly_reports',
         db_index=True
@@ -153,22 +148,13 @@ class MonthlyAttendanceReport(TimeUserStamps):
     def __str__(self):
         return f"{self.student} - {self.month:02d}/{self.year} - {self.attendance_percentage}%"
 
-    # REMOVED: clean() method - validation moved to serializer
-    # REMOVED: calculate_percentage() - moved to serializer
-    # REMOVED: calculate_punctuality_score() - moved to serializer
-    # REMOVED: calculate_percentage_change() - moved to serializer
-    # REMOVED: save() method with auto-calculations - moved to serializer
-    # REMOVED: effective_working_days property - moved to serializer
-    # REMOVED: attendance_breakdown property - moved to serializer
-
 
 class AttendanceConfiguration(TimeUserStamps):
     """Configuration for attendance calculations - Simplified"""
     
     section = models.ForeignKey(
-        'Section', 
+        'academic.Section',  # ✅ CORRECT - uses 'academic' app (singular)
         on_delete=models.CASCADE,
-        unique=True
     )
     
     # School timing
@@ -214,14 +200,12 @@ class AttendanceConfiguration(TimeUserStamps):
     def __str__(self):
         return f"Attendance Config - {self.section}"
 
-    # REMOVED: clean() method - validation moved to serializer
-
 
 class AttendanceSummary(TimeUserStamps):
     """Quick lookup table for attendance summaries - Simplified"""
     
     student = models.OneToOneField(
-        'Student',
+        'users.Student',  # ✅ CORRECT - uses 'users' app
         on_delete=models.CASCADE,
         primary_key=True,
         related_name='attendance_summary'
@@ -264,8 +248,3 @@ class AttendanceSummary(TimeUserStamps):
 
     def __str__(self):
         return f"{self.student} - {self.overall_percentage}%"
-
-    # REMOVED: calculate_overall_percentage() - moved to serializer
-    # REMOVED: save() method with auto-calculation - moved to serializer
-    # REMOVED: needs_improvement property - moved to serializer
-    # REMOVED: attendance_trend property - moved to serializer
