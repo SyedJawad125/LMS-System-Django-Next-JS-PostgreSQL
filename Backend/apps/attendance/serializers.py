@@ -1,3 +1,4 @@
+from decimal import Decimal
 from rest_framework import serializers
 from django.utils import timezone
 from django.db.models import Count, Sum, Q
@@ -271,6 +272,8 @@ class MonthlyAttendanceReportListingSerializer(serializers.ModelSerializer):
         return f"{calendar.month_name[obj.month]} {obj.year}"
 
 
+
+
 class MonthlyAttendanceReportSerializer(serializers.ModelSerializer):
     """Full monthly attendance report serializer"""
     created_by = serializers.SerializerMethodField()
@@ -293,7 +296,7 @@ class MonthlyAttendanceReportSerializer(serializers.ModelSerializer):
             'created_by', 'updated_by', 'created_at', 'updated_at'
         ]
         read_only_fields = (
-            'created_at', 'updated_at', 'created_by', 'updated_by',
+            'created_at', 'updated_at', 'created_by',  # REMOVED 'updated_by' from here
             'attendance_percentage', 'punctuality_score', 'percentage_change',
             'finalized_at'
         )
@@ -384,47 +387,70 @@ class MonthlyAttendanceReportSerializer(serializers.ModelSerializer):
         return attrs
     
     def _calculate_percentage(self, data):
-        """Calculate attendance percentage"""
+        """Calculate attendance percentage - FIXED VERSION"""
         total = data.get('total_school_days', 0)
         excused = data.get('excused_days', 0)
         sick = data.get('sick_leave_days', 0)
         present = data.get('present_days', 0)
         half = data.get('half_days', 0)
         
-        if total > 0:
-            effective_days = total - excused - sick
+        # Convert all to Decimal to avoid type conflicts
+        total_dec = Decimal(str(total))
+        excused_dec = Decimal(str(excused))
+        sick_dec = Decimal(str(sick))
+        present_dec = Decimal(str(present))
+        half_dec = Decimal(str(half))
+        
+        if total_dec > 0:
+            effective_days = total_dec - excused_dec - sick_dec
             if effective_days > 0:
-                effective_present = present + (half * 0.5)
-                return round((effective_present / effective_days) * 100, 2)
-        return 0
+                # Use Decimal for calculations instead of float
+                effective_present = present_dec + (half_dec * Decimal('0.5'))
+                percentage = (effective_present / effective_days) * Decimal('100')
+                return percentage.quantize(Decimal('0.01'))  # Round to 2 decimal places
+        return Decimal('0.00')
     
     def _calculate_punctuality_score(self, data):
-        """Calculate punctuality score"""
+        """Calculate punctuality score - FIXED VERSION"""
         present = data.get('present_days', 0)
         late = data.get('late_days', 0)
         half = data.get('half_days', 0)
         
-        total_attended = present + late + half
+        # Convert all to Decimal
+        present_dec = Decimal(str(present))
+        late_dec = Decimal(str(late))
+        half_dec = Decimal(str(half))
+        
+        total_attended = present_dec + late_dec + half_dec
         if total_attended > 0:
-            score = present + (late * 0.5) + (half * 0.75)
-            return round((score / total_attended) * 100, 2)
-        return 0
+            # Use Decimal constants instead of float
+            score = present_dec + (late_dec * Decimal('0.5')) + (half_dec * Decimal('0.75'))
+            punctuality = (score / total_attended) * Decimal('100')
+            return punctuality.quantize(Decimal('0.01'))
+        return Decimal('0.00')
     
     def create(self, validated_data):
-        """Auto-calculate metrics before creating"""
+        """Auto-calculate metrics before creating - FIXED VERSION"""
+        # Calculate percentages
         validated_data['attendance_percentage'] = self._calculate_percentage(validated_data)
         validated_data['punctuality_score'] = self._calculate_punctuality_score(validated_data)
         
-        if validated_data.get('previous_month_percentage', 0) > 0:
+        # Handle percentage change - ensure both are Decimal
+        prev_percentage = validated_data.get('previous_month_percentage', Decimal('0'))
+        if isinstance(prev_percentage, float):
+            prev_percentage = Decimal(str(prev_percentage))
+            
+        if prev_percentage > 0:
             validated_data['percentage_change'] = (
-                validated_data['attendance_percentage'] - 
-                validated_data['previous_month_percentage']
+                validated_data['attendance_percentage'] - prev_percentage
             )
+        else:
+            validated_data['percentage_change'] = Decimal('0.00')
         
         return super().create(validated_data)
     
     def update(self, instance, validated_data):
-        """Handle finalization and recalculate metrics"""
+        """Handle finalization and recalculate metrics - FIXED to set updated_by"""
         # Merge with existing values for calculation
         calc_data = {
             'total_school_days': validated_data.get('total_school_days', instance.total_school_days),
@@ -437,14 +463,21 @@ class MonthlyAttendanceReportSerializer(serializers.ModelSerializer):
             'previous_month_percentage': validated_data.get('previous_month_percentage', instance.previous_month_percentage),
         }
         
+        # Calculate percentages
         validated_data['attendance_percentage'] = self._calculate_percentage(calc_data)
         validated_data['punctuality_score'] = self._calculate_punctuality_score(calc_data)
         
-        if calc_data['previous_month_percentage'] > 0:
+        # Handle percentage change - ensure both are Decimal
+        prev_percentage = calc_data['previous_month_percentage']
+        if isinstance(prev_percentage, float):
+            prev_percentage = Decimal(str(prev_percentage))
+            
+        if prev_percentage > 0:
             validated_data['percentage_change'] = (
-                validated_data['attendance_percentage'] - 
-                calc_data['previous_month_percentage']
+                validated_data['attendance_percentage'] - prev_percentage
             )
+        else:
+            validated_data['percentage_change'] = Decimal('0.00')
         
         # Handle finalization
         is_finalized = validated_data.get('is_finalized', instance.is_finalized)
@@ -453,31 +486,12 @@ class MonthlyAttendanceReportSerializer(serializers.ModelSerializer):
         elif not is_finalized and instance.is_finalized:
             validated_data['finalized_at'] = None
         
+        # Set updated_by from request context - THIS WILL NOW WORK
+        request = self.context.get('request')
+        if request and request.user:
+            validated_data['updated_by'] = request.user
+        
         return super().update(instance, validated_data)
-    
-    def to_representation(self, instance):
-        # Handle soft deleted records
-        if instance.deleted:
-            return {
-                'id': instance.id,
-                'student': instance.student_id,
-                'month': instance.month,
-                'year': instance.year,
-                'message': 'Monthly attendance report has been deleted successfully'
-            }
-        
-        data = super().to_representation(instance)
-        
-        if isinstance(data.get('created_at'), str):
-            data['created_at'] = data['created_at'].replace('T', ' ').split('.')[0]
-        if isinstance(data.get('updated_at'), str):
-            data['updated_at'] = data['updated_at'].replace('T', ' ').split('.')[0]
-        if isinstance(data.get('finalized_at'), str):
-            data['finalized_at'] = data['finalized_at'].replace('T', ' ').split('.')[0]
-        
-        return data
-
-
 # ======================= ATTENDANCE CONFIGURATION SERIALIZERS =======================
 
 class AttendanceConfigurationListingSerializer(serializers.ModelSerializer):
