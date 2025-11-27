@@ -176,3 +176,33 @@ CREATE_TIME_TABLE = 'create_time_table'
 READ_TIME_TABLE = 'read_time_table'
 UPDATE_TIME_TABLE = 'update_time_table'
 DELETE_TIME_TABLE = 'delete_time_table'
+
+# Exam Type Permissions
+CREATE_EXAM_TYPE = 'create_exam_type'
+READ_EXAM_TYPE = 'read_exam_type'
+UPDATE_EXAM_TYPE = 'update_exam_type'
+DELETE_EXAM_TYPE = 'delete_exam_type'
+
+# Exam Permissions
+CREATE_EXAM = 'create_exam'
+READ_EXAM = 'read_exam'
+UPDATE_EXAM = 'update_exam'
+DELETE_EXAM = 'delete_exam'
+
+# Exam Schedule Permissions
+CREATE_EXAM_SCHEDULE = 'create_exam_schedule'
+READ_EXAM_SCHEDULE = 'read_exam_schedule'
+UPDATE_EXAM_SCHEDULE = 'update_exam_schedule'
+DELETE_EXAM_SCHEDULE = 'delete_exam_schedule'
+
+# Exam Result Permissions
+CREATE_EXAM_RESULT = 'create_exam_result'
+READ_EXAM_RESULT = 'read_exam_result'
+UPDATE_EXAM_RESULT = 'update_exam_result'
+DELETE_EXAM_RESULT = 'delete_exam_result'
+
+# Grade System Permissions
+CREATE_GRADE_SYSTEM = 'create_grade_system'
+READ_GRADE_SYSTEM = 'read_grade_system'
+UPDATE_GRADE_SYSTEM = 'update_grade_system'
+DELETE_GRADE_SYSTEM = 'delete_grade_system'

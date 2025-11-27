@@ -219,6 +219,36 @@ permissions = [
         Permission(name='Read Timetable', code_name='read_time_table', module_name='Timetable', module_label='Timetable Management', description='User can read Timetable'),
         Permission(name='Update Timetable', code_name='update_time_table', module_name='Timetable', module_label='Timetable Management', description='User can update Timetable'),
         Permission(name='Delete Timetable', code_name='delete_time_table', module_name='Timetable', module_label='Timetable Management', description='User can delete Timetable'),
+
+        # ---------- Exam Type ----------
+        Permission(name='Create Exam Type', code_name='create_exam_type', module_name='Exam Type', module_label='Examination Management', description='User can create Exam Type'),
+        Permission(name='Read Exam Type', code_name='read_exam_type', module_name='Exam Type', module_label='Examination Management', description='User can read Exam Type'),
+        Permission(name='Update Exam Type', code_name='update_exam_type', module_name='Exam Type', module_label='Examination Management', description='User can update Exam Type'),
+        Permission(name='Delete Exam Type', code_name='delete_exam_type', module_name='Exam Type', module_label='Examination Management', description='User can delete Exam Type'),
+
+        # ---------- Exam ----------
+        Permission(name='Create Exam', code_name='create_exam', module_name='Exam', module_label='Examination Management', description='User can create Exam'),
+        Permission(name='Read Exam', code_name='read_exam', module_name='Exam', module_label='Examination Management', description='User can read Exam'),
+        Permission(name='Update Exam', code_name='update_exam', module_name='Exam', module_label='Examination Management', description='User can update Exam'),
+        Permission(name='Delete Exam', code_name='delete_exam', module_name='Exam', module_label='Examination Management', description='User can delete Exam'),
+
+        # ---------- Exam Schedule ----------
+        Permission(name='Create Exam Schedule', code_name='create_exam_schedule', module_name='Exam Schedule', module_label='Examination Management', description='User can create Exam Schedule'),
+        Permission(name='Read Exam Schedule', code_name='read_exam_schedule', module_name='Exam Schedule', module_label='Examination Management', description='User can read Exam Schedule'),
+        Permission(name='Update Exam Schedule', code_name='update_exam_schedule', module_name='Exam Schedule', module_label='Examination Management', description='User can update Exam Schedule'),
+        Permission(name='Delete Exam Schedule', code_name='delete_exam_schedule', module_name='Exam Schedule', module_label='Examination Management', description='User can delete Exam Schedule'),
+
+        # ---------- Exam Result ----------
+        Permission(name='Create Exam Result', code_name='create_exam_result', module_name='Exam Result', module_label='Examination Management', description='User can create Exam Result'),
+        Permission(name='Read Exam Result', code_name='read_exam_result', module_name='Exam Result', module_label='Examination Management', description='User can read Exam Result'),
+        Permission(name='Update Exam Result', code_name='update_exam_result', module_name='Exam Result', module_label='Examination Management', description='User can update Exam Result'),
+        Permission(name='Delete Exam Result', code_name='delete_exam_result', module_name='Exam Result', module_label='Examination Management', description='User can delete Exam Result'),
+
+        # ---------- Grade System ----------
+        Permission(name='Create Grade System', code_name='create_grade_system', module_name='Grade System', module_label='Examination Management', description='User can create Grade System'),
+        Permission(name='Read Grade System', code_name='read_grade_system', module_name='Grade System', module_label='Examination Management', description='User can read Grade System'),
+        Permission(name='Update Grade System', code_name='update_grade_system', module_name='Grade System', module_label='Examination Management', description='User can update Grade System'),
+        Permission(name='Delete Grade System', code_name='delete_grade_system', module_name='Grade System', module_label='Examination Management', description='User can delete Grade System'),
 ]
 
 
