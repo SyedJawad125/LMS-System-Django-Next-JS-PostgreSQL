@@ -207,6 +207,18 @@ permissions = [
         Permission(name='Read Attendance Summary', code_name='read_attendance_summary', module_name='AttendanceSummary', module_label='Attendance Summary Management', description='User can read Attendance Summary'),
         Permission(name='Update Attendance Summary', code_name='update_attendance_summary', module_name='AttendanceSummary', module_label='Attendance Summary Management', description='User can update Attendance Summary'),
         Permission(name='Delete Attendance Summary', code_name='delete_attendance_summary', module_name='AttendanceSummary', module_label='Attendance Summary Management', description='User can delete Attendance Summary'),
+
+        # ---------- TimeSlot ----------
+        Permission(name='Create Time Slot', code_name='create_time_slot', module_name='TimeSlot', module_label='Time Slot Management', description='User can create Time Slot'),
+        Permission(name='Read Time Slot', code_name='read_time_slot', module_name='TimeSlot', module_label='Time Slot Management', description='User can read Time Slot'),
+        Permission(name='Update Time Slot', code_name='update_time_slot', module_name='TimeSlot', module_label='Time Slot Management', description='User can update Time Slot'),
+        Permission(name='Delete Time Slot', code_name='delete_time_slot', module_name='TimeSlot', module_label='Time Slot Management', description='User can delete Time Slot'),
+
+        # ---------- Timetable ----------
+        Permission(name='Create Timetable', code_name='create_time_table', module_name='Timetable', module_label='Timetable Management', description='User can create Timetable'),
+        Permission(name='Read Timetable', code_name='read_time_table', module_name='Timetable', module_label='Timetable Management', description='User can read Timetable'),
+        Permission(name='Update Timetable', code_name='update_time_table', module_name='Timetable', module_label='Timetable Management', description='User can update Timetable'),
+        Permission(name='Delete Timetable', code_name='delete_time_table', module_name='Timetable', module_label='Timetable Management', description='User can delete Timetable'),
 ]
 
 

@@ -164,3 +164,15 @@ CREATE_ATTENDANCE_SUMMARY = 'create_attendance_summary'
 READ_ATTENDANCE_SUMMARY = 'read_attendance_summary'
 UPDATE_ATTENDANCE_SUMMARY = 'update_attendance_summary'
 DELETE_ATTENDANCE_SUMMARY = 'delete_attendance_summary'
+
+# TimeSlot Permissions
+CREATE_TIME_SLOT = 'create_time_slot'
+READ_TIME_SLOT = 'read_time_slot'
+UPDATE_TIME_SLOT = 'update_time_slot'
+DELETE_TIME_SLOT = 'delete_time_slot'
+
+# Timetable Permissions
+CREATE_TIME_TABLE = 'create_time_table'
+READ_TIME_TABLE = 'read_time_table'
+UPDATE_TIME_TABLE = 'update_time_table'
+DELETE_TIME_TABLE = 'delete_time_table'

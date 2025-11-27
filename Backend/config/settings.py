@@ -92,6 +92,7 @@ INSTALLED_APPS = [
     'apps.images',
     'apps.academic',
     'apps.attendance',
+    'apps.timetable',
 
     "drf_spectacular",
     "drf_spectacular_sidecar",
