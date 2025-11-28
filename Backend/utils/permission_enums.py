@@ -206,3 +206,39 @@ CREATE_GRADE_SYSTEM = 'create_grade_system'
 READ_GRADE_SYSTEM = 'read_grade_system'
 UPDATE_GRADE_SYSTEM = 'update_grade_system'
 DELETE_GRADE_SYSTEM = 'delete_grade_system'
+
+# Add these to your permission_enums.py
+CREATE_FEE_TYPE = "create_fee_type"
+READ_FEE_TYPE = "read_fee_type"
+UPDATE_FEE_TYPE = "update_fee_type"
+DELETE_FEE_TYPE = "delete_fee_type"
+
+CREATE_FEE_STRUCTURE = "create_fee_structure"
+READ_FEE_STRUCTURE = "read_fee_structure"
+UPDATE_FEE_STRUCTURE = "update_fee_structure"
+DELETE_FEE_STRUCTURE = "delete_fee_structure"
+
+CREATE_FEE_INVOICE = "create_fee_invoice"
+READ_FEE_INVOICE = "read_fee_invoice"
+UPDATE_FEE_INVOICE = "update_fee_invoice"
+DELETE_FEE_INVOICE = "delete_fee_invoice"
+
+CREATE_FEE_INVOICE_ITEM = "create_fee_invoice_item"
+READ_FEE_INVOICE_ITEM = "read_fee_invoice_item"
+UPDATE_FEE_INVOICE_ITEM = "update_fee_invoice_item"
+DELETE_FEE_INVOICE_ITEM = "delete_fee_invoice_item"
+
+CREATE_FEE_PAYMENT = "create_fee_payment"
+READ_FEE_PAYMENT = "read_fee_payment"
+UPDATE_FEE_PAYMENT = "update_fee_payment"
+DELETE_FEE_PAYMENT = "delete_fee_payment"
+
+CREATE_FEE_DISCOUNT = "create_fee_discount"
+READ_FEE_DISCOUNT = "read_fee_discount"
+UPDATE_FEE_DISCOUNT = "update_fee_discount"
+DELETE_FEE_DISCOUNT = "delete_fee_discount"
+
+CREATE_STUDENT_DISCOUNT = "create_student_discount"
+READ_STUDENT_DISCOUNT = "read_student_discount"
+UPDATE_STUDENT_DISCOUNT = "update_student_discount"
+DELETE_STUDENT_DISCOUNT = "delete_student_discount"

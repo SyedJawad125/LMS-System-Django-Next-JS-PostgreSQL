@@ -249,6 +249,49 @@ permissions = [
         Permission(name='Read Grade System', code_name='read_grade_system', module_name='Grade System', module_label='Examination Management', description='User can read Grade System'),
         Permission(name='Update Grade System', code_name='update_grade_system', module_name='Grade System', module_label='Examination Management', description='User can update Grade System'),
         Permission(name='Delete Grade System', code_name='delete_grade_system', module_name='Grade System', module_label='Examination Management', description='User can delete Grade System'),
+
+        # ---------- Fee Type ----------
+        Permission(name='Create Fee Type', code_name='create_fee_type', module_name='Fee Type', module_label='Fee Management', description='User can create Fee Type'),
+        Permission(name='Read Fee Type', code_name='read_fee_type', module_name='Fee Type', module_label='Fee Management', description='User can read Fee Type'),
+        Permission(name='Update Fee Type', code_name='update_fee_type', module_name='Fee Type', module_label='Fee Management', description='User can update Fee Type'),
+        Permission(name='Delete Fee Type', code_name='delete_fee_type', module_name='Fee Type', module_label='Fee Management', description='User can delete Fee Type'),
+
+        # ---------- Fee Structure ----------
+        Permission(name='Create Fee Structure', code_name='create_fee_structure', module_name='Fee Structure', module_label='Fee Management', description='User can create Fee Structure'),
+        Permission(name='Read Fee Structure', code_name='read_fee_structure', module_name='Fee Structure', module_label='Fee Management', description='User can read Fee Structure'),
+        Permission(name='Update Fee Structure', code_name='update_fee_structure', module_name='Fee Structure', module_label='Fee Management', description='User can update Fee Structure'),
+        Permission(name='Delete Fee Structure', code_name='delete_fee_structure', module_name='Fee Structure', module_label='Fee Management', description='User can delete Fee Structure'),
+
+        # ---------- Fee Invoice ----------
+        Permission(name='Create Fee Invoice', code_name='create_fee_invoice', module_name='Fee Invoice', module_label='Fee Management', description='User can create Fee Invoice'),
+        Permission(name='Read Fee Invoice', code_name='read_fee_invoice', module_name='Fee Invoice', module_label='Fee Management', description='User can read Fee Invoice'),
+        Permission(name='Update Fee Invoice', code_name='update_fee_invoice', module_name='Fee Invoice', module_label='Fee Management', description='User can update Fee Invoice'),
+        Permission(name='Delete Fee Invoice', code_name='delete_fee_invoice', module_name='Fee Invoice', module_label='Fee Management', description='User can delete Fee Invoice'),
+
+        # ---------- Fee Invoice Item ----------
+        Permission(name='Create Fee Invoice Item', code_name='create_fee_invoice_item', module_name='Fee Invoice Item', module_label='Fee Management', description='User can create Fee Invoice Item'),
+        Permission(name='Read Fee Invoice Item', code_name='read_fee_invoice_item', module_name='Fee Invoice Item', module_label='Fee Management', description='User can read Fee Invoice Item'),
+        Permission(name='Update Fee Invoice Item', code_name='update_fee_invoice_item', module_name='Fee Invoice Item', module_label='Fee Management', description='User can update Fee Invoice Item'),
+        Permission(name='Delete Fee Invoice Item', code_name='delete_fee_invoice_item', module_name='Fee Invoice Item', module_label='Fee Management', description='User can delete Fee Invoice Item'),
+
+        # ---------- Fee Payment ----------
+        Permission(name='Create Fee Payment', code_name='create_fee_payment', module_name='Fee Payment', module_label='Fee Management', description='User can create Fee Payment'),
+        Permission(name='Read Fee Payment', code_name='read_fee_payment', module_name='Fee Payment', module_label='Fee Management', description='User can read Fee Payment'),
+        Permission(name='Update Fee Payment', code_name='update_fee_payment', module_name='Fee Payment', module_label='Fee Management', description='User can update Fee Payment'),
+        Permission(name='Delete Fee Payment', code_name='delete_fee_payment', module_name='Fee Payment', module_label='Fee Management', description='User can delete Fee Payment'),
+
+        # ---------- Fee Discount ----------
+        Permission(name='Create Fee Discount', code_name='create_fee_discount', module_name='Fee Discount', module_label='Fee Management', description='User can create Fee Discount'),
+        Permission(name='Read Fee Discount', code_name='read_fee_discount', module_name='Fee Discount', module_label='Fee Management', description='User can read Fee Discount'),
+        Permission(name='Update Fee Discount', code_name='update_fee_discount', module_name='Fee Discount', module_label='Fee Management', description='User can update Fee Discount'),
+        Permission(name='Delete Fee Discount', code_name='delete_fee_discount', module_name='Fee Discount', module_label='Fee Management', description='User can delete Fee Discount'),
+
+        # ---------- Student Discount ----------
+        Permission(name='Create Student Discount', code_name='create_student_discount', module_name='Student Discount', module_label='Fee Management', description='User can create Student Discount'),
+        Permission(name='Read Student Discount', code_name='read_student_discount', module_name='Student Discount', module_label='Fee Management', description='User can read Student Discount'),
+        Permission(name='Update Student Discount', code_name='update_student_discount', module_name='Student Discount', module_label='Fee Management', description='User can update Student Discount'),
+        Permission(name='Delete Student Discount', code_name='delete_student_discount', module_name='Student Discount', module_label='Fee Management', description='User can delete Student Discount'),
+
 ]
 
 
