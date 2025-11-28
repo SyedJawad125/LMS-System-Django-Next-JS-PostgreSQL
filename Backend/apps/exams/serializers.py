@@ -41,15 +41,15 @@ class ExamTypeSerializer(serializers.ModelSerializer):
         return None
     
     def get_exams_count(self, obj):
-        # REMOVED: if obj.deleted: return 0
-        return obj.exam_set.count()  # Simple count without deleted filter
+        if obj.deleted:
+            return 0
+        return obj.exam_set.filter(deleted=False).count()
     
     def validate_name(self, value):
         if len(value.strip()) < 2:
             raise serializers.ValidationError("Exam type name must be at least 2 characters long")
         
-        # REMOVED: deleted=False filter
-        qs = ExamType.objects.filter(name__iexact=value.strip())
+        qs = ExamType.objects.filter(name__iexact=value.strip(), deleted=False)
         if self.instance:
             qs = qs.exclude(id=self.instance.id)
         
@@ -62,8 +62,7 @@ class ExamTypeSerializer(serializers.ModelSerializer):
         if len(value.strip()) < 2:
             raise serializers.ValidationError("Exam type code must be at least 2 characters long")
         
-        # REMOVED: deleted=False filter
-        qs = ExamType.objects.filter(code__iexact=value.strip())
+        qs = ExamType.objects.filter(code__iexact=value.strip(), deleted=False)
         if self.instance:
             qs = qs.exclude(id=self.instance.id)
         
@@ -78,7 +77,13 @@ class ExamTypeSerializer(serializers.ModelSerializer):
         return value
     
     def to_representation(self, instance):
-        # REMOVED: if instance.deleted: logic since there's no deleted field
+        if instance.deleted:
+            return {
+                'id': instance.id,
+                'name': instance.name,
+                'message': f'Exam type "{instance.name}" has been deleted successfully'
+            }
+        
         data = super().to_representation(instance)
         
         if isinstance(data.get('created_at'), str):
@@ -87,6 +92,7 @@ class ExamTypeSerializer(serializers.ModelSerializer):
             data['updated_at'] = data['updated_at'].replace('T', ' ').split('.')[0]
         
         return data
+
 
 # ==================== Exam Serializers ====================
 
@@ -394,7 +400,8 @@ class ExamResultListingSerializer(serializers.ModelSerializer):
     
     def get_student_name(self, obj):
         if obj.student and obj.student.user:
-            return obj.student.user.full_name or obj.student.user.username
+            full_name = obj.student.user.get_full_name()
+            return full_name.strip() if full_name and full_name.strip() else obj.student.user.username
         return None
 
 
@@ -418,6 +425,11 @@ class ExamResultSerializer(serializers.ModelSerializer):
             'created_by', 'updated_by', 'created_at', 'updated_at'
         ]
         read_only_fields = ('entered_at', 'grade', 'created_at', 'updated_at', 'created_by', 'updated_by')
+         # ADD THIS:
+        extra_kwargs = {
+            'exam_schedule': {'required': True},
+            'student': {'required': True}
+        }
     
     def get_created_by(self, obj):
         if obj.created_by:
@@ -481,39 +493,110 @@ class ExamResultSerializer(serializers.ModelSerializer):
         return value
     
     def validate(self, data):
-        """Cross-field validation"""
-        exam_schedule = data.get('exam_schedule', getattr(self.instance, 'exam_schedule', None))
-        marks_obtained = data.get('marks_obtained', getattr(self.instance, 'marks_obtained', None))
-        is_absent = data.get('is_absent', getattr(self.instance, 'is_absent', False))
+        """Professional cross-field validation with proper duplicate handling"""
+        instance = getattr(self, 'instance', None)
         
-        # Validate marks against max marks
-        if exam_schedule and marks_obtained is not None and not is_absent:
-            if marks_obtained > exam_schedule.max_marks:
+        # Get current values from instance (for updates)
+        current_exam_schedule = getattr(instance, 'exam_schedule', None) if instance else None
+        current_student = getattr(instance, 'student', None) if instance else None
+        current_marks = getattr(instance, 'marks_obtained', None) if instance else None
+        current_absent = getattr(instance, 'is_absent', False) if instance else False
+        
+        # Get new values from data
+        exam_schedule = data.get('exam_schedule', current_exam_schedule)
+        student = data.get('student', current_student)
+        marks_obtained = data.get('marks_obtained', current_marks)
+        is_absent = data.get('is_absent', current_absent)
+        
+        print(f"🔍 DEBUG: Operation = {'UPDATE' if instance else 'CREATE'}")
+        print(f"🔍 DEBUG: Instance ID = {getattr(instance, 'id', 'None')}")
+        print(f"🔍 DEBUG: Exam Schedule = {exam_schedule.id if exam_schedule else 'None'}")
+        print(f"🔍 DEBUG: Student = {student.id if student else 'None'}")
+
+        # 1. Validate required fields for creation
+        if not instance:  # CREATE operation
+            if not exam_schedule:
+                raise serializers.ValidationError({
+                    'exam_schedule': 'Exam schedule is required'
+                })
+            if not student:
+                raise serializers.ValidationError({
+                    'student': 'Student is required'
+                })
+
+        # 2. Validate exam_schedule exists and is not deleted
+        if exam_schedule and exam_schedule.deleted:
+            raise serializers.ValidationError({
+                'exam_schedule': 'Cannot use a deleted exam schedule'
+            })
+
+        # 3. Validate marks for absent students
+        if is_absent:
+            if marks_obtained is not None and marks_obtained > 0:
+                raise serializers.ValidationError({
+                    'marks_obtained': 'Marks must be 0 for absent students'
+                })
+            # Auto-set marks to 0 if absent
+            data['marks_obtained'] = 0
+        else:
+            # 4. Validate marks for present students
+            if marks_obtained is None:
+                raise serializers.ValidationError({
+                    'marks_obtained': 'Marks are required for present students'
+                })
+            
+            if marks_obtained < 0:
+                raise serializers.ValidationError({
+                    'marks_obtained': 'Marks cannot be negative'
+                })
+            
+            # 5. Validate marks against max marks
+            if exam_schedule and marks_obtained > exam_schedule.max_marks:
                 raise serializers.ValidationError({
                     'marks_obtained': f'Marks cannot exceed maximum marks ({exam_schedule.max_marks})'
                 })
-        
-        # If absent, marks should be 0
-        if is_absent and marks_obtained and marks_obtained > 0:
-            raise serializers.ValidationError({
-                'marks_obtained': 'Marks must be 0 for absent students'
-            })
-        
-        # Check for duplicate result
-        exam_schedule = data.get('exam_schedule', getattr(self.instance, 'exam_schedule', None))
-        student = data.get('student', getattr(self.instance, 'student', None))
-        
+
+        # 6. ENHANCED DUPLICATE VALIDATION
         if exam_schedule and student:
-            qs = ExamResult.objects.filter(exam_schedule=exam_schedule, student=student, deleted=False)
-            if self.instance:
-                qs = qs.exclude(id=self.instance.id)
+            # Validate student is not deleted
+            if student.deleted:
+                raise serializers.ValidationError({
+                    'student': 'Cannot add result for a deleted student'
+                })
             
-            if qs.exists():
-                student_name = student.user.full_name if student.user else 'Student'
-                raise serializers.ValidationError(
-                    f"Result for student '{student_name}' already exists for this exam"
+            # Check if we're actually changing the unique combination
+            is_changing_combination = (
+                (data.get('exam_schedule') is not None and data.get('exam_schedule') != current_exam_schedule) or
+                (data.get('student') is not None and data.get('student') != current_student)
+            )
+            
+            # Only check for duplicates if:
+            # - It's a CREATE operation, OR
+            # - It's an UPDATE and we're changing the unique combination
+            if not instance or is_changing_combination:
+                qs = ExamResult.objects.filter(
+                    exam_schedule=exam_schedule, 
+                    student=student, 
+                    deleted=False
                 )
+                
+                if instance and instance.id:
+                    qs = qs.exclude(id=instance.id)
+                
+                duplicate_count = qs.count()
+                print(f"🔍 DEBUG: Duplicate check - Found {duplicate_count} existing records")
+                
+                if qs.exists():
+                    existing_result = qs.first()
+                    student_name = student.user.get_full_name() if student.user else f"Student ID: {student.id}"
+                    
+                    raise serializers.ValidationError({
+                        'non_field_errors': [
+                            f"Result for student '{student_name}' already exists for this exam schedule (Existing ID: {existing_result.id})"
+                        ]
+                    })
         
+        print("✅ DEBUG: Validation passed successfully")
         return data
     
     def create(self, validated_data):
@@ -530,9 +613,12 @@ class ExamResultSerializer(serializers.ModelSerializer):
         return result
     
     def _calculate_grade(self, result):
-        """Calculate grade based on percentage"""
+        """Calculate grade based on percentage with better fallback"""
         if result.is_absent:
             return 'AB'
+        
+        if result.exam_schedule.max_marks <= 0:
+            return 'N/A'
         
         percentage = (float(result.marks_obtained) / result.exam_schedule.max_marks) * 100
         
@@ -545,16 +631,32 @@ class ExamResultSerializer(serializers.ModelSerializer):
             
             if grade_system:
                 return grade_system.grade
-        except:
+        except Exception:
+            # Log the error for debugging
             pass
         
-        return 'N/A'
+        # Fallback grade calculation if GradeSystem is not available
+        return self._fallback_grade_calculation(percentage)
+
+    def _fallback_grade_calculation(self, percentage):
+        """Fallback grade calculation if GradeSystem is not configured"""
+        if percentage >= 90: return 'A+'
+        elif percentage >= 80: return 'A'
+        elif percentage >= 70: return 'B'
+        elif percentage >= 60: return 'C'
+        elif percentage >= 50: return 'D'
+        elif percentage >= 40: return 'E'
+        else: return 'F'
     
     def to_representation(self, instance):
         if instance.deleted:
+            student_name = None
+            if instance.student and instance.student.user:
+                student_name = instance.student.user.get_full_name() or instance.student.user.username
+            
             return {
                 'id': instance.id,
-                'student': instance.student.user.full_name if instance.student and instance.student.user else None,
+                'student': student_name,
                 'message': f'Exam result has been deleted successfully'
             }
         
