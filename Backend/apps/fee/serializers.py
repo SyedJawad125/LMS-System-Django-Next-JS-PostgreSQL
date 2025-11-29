@@ -6,7 +6,7 @@ from .models import (
     FeePayment, FeeDiscount, StudentDiscount
 )
 from apps.academic.serializers import AcademicYearListingSerializer, ClassListingSerializer
-from apps.users.serializers import StudentListingSerializer
+from apps.users.serializers import StudentListingSerializer, UserListSerializer
 
 
 # ==================== Fee Type Serializers ====================
@@ -230,18 +230,36 @@ class FeeInvoiceItemListingSerializer(serializers.ModelSerializer):
 class FeeInvoiceItemSerializer(serializers.ModelSerializer):
     """Full fee invoice item serializer with validations"""
     fee_type_detail = serializers.SerializerMethodField()
+    created_by = serializers.SerializerMethodField()
+    updated_by = serializers.SerializerMethodField()
     
     class Meta:
         model = FeeInvoiceItem
-        fields = ['id', 'invoice', 'fee_type', 'amount', 'description', 'fee_type_detail']
+        fields = [
+            'id', 'invoice', 'fee_type', 'amount', 'description', 
+            'fee_type_detail', 'created_by', 'updated_by', 'created_at', 'updated_at'
+        ]
         extra_kwargs = {
             'invoice': {'required': True},
             'fee_type': {'required': True}
         }
+        read_only_fields = ('created_at', 'updated_at', 'created_by', 'updated_by')
     
     def get_fee_type_detail(self, obj):
         if obj.fee_type and not obj.fee_type.deleted:
             return FeeTypeListingSerializer(obj.fee_type).data
+        return None
+    
+    def get_created_by(self, obj):
+        if obj.created_by:
+            full_name = obj.created_by.get_full_name()
+            return full_name.strip() if full_name and full_name.strip() else obj.created_by.username
+        return None
+    
+    def get_updated_by(self, obj):
+        if obj.updated_by:
+            full_name = obj.updated_by.get_full_name()
+            return full_name.strip() if full_name and full_name.strip() else obj.updated_by.username
         return None
     
     def validate_fee_type(self, value):
@@ -253,8 +271,24 @@ class FeeInvoiceItemSerializer(serializers.ModelSerializer):
         if value <= 0:
             raise serializers.ValidationError("Amount must be greater than 0")
         return value
-
-
+    
+    def to_representation(self, instance):
+        if instance.deleted:
+            return {
+                'id': instance.id,
+                'invoice': instance.invoice_id,
+                'message': f'Invoice item has been deleted successfully'
+            }
+        
+        data = super().to_representation(instance)
+        
+        # Format datetime fields to match your invoice serializer
+        if isinstance(data.get('created_at'), str):
+            data['created_at'] = data['created_at'].replace('T', ' ').split('.')[0]
+        if isinstance(data.get('updated_at'), str):
+            data['updated_at'] = data['updated_at'].replace('T', ' ').split('.')[0]
+        
+        return data
 # ==================== Fee Invoice Serializers ====================
 
 class FeeInvoiceListingSerializer(serializers.ModelSerializer):
@@ -492,7 +526,7 @@ class FeePaymentSerializer(serializers.ModelSerializer):
             'invoice_detail', 'received_by_detail',
             'created_by', 'updated_by', 'created_at', 'updated_at'
         ]
-        read_only_fields = ('created_at', 'updated_at', 'created_by', 'updated_by')
+        read_only_fields = ('payment_id', 'created_at', 'updated_at', 'created_by', 'updated_by')
     
     def get_created_by(self, obj):
         if obj.created_by:
@@ -513,21 +547,10 @@ class FeePaymentSerializer(serializers.ModelSerializer):
     
     def get_received_by_detail(self, obj):
         if obj.received_by and not obj.received_by.deleted:
-            return UserListingSerializer(obj.received_by).data
+            return UserListSerializer(obj.received_by).data
         return None
     
-    def validate_payment_id(self, value):
-        if len(value.strip()) < 3:
-            raise serializers.ValidationError("Payment ID must be at least 3 characters long")
-        
-        qs = FeePayment.objects.filter(payment_id__iexact=value.strip(), deleted=False)
-        if self.instance:
-            qs = qs.exclude(id=self.instance.id)
-        
-        if qs.exists():
-            raise serializers.ValidationError(f"Payment ID '{value}' already exists")
-        
-        return value.strip()
+    # REMOVED validate_payment_id method since it's now auto-generated
     
     def validate_invoice(self, value):
         if value.deleted:
@@ -537,6 +560,13 @@ class FeePaymentSerializer(serializers.ModelSerializer):
     def validate_amount(self, value):
         if value <= 0:
             raise serializers.ValidationError("Payment amount must be greater than 0")
+        return value
+    
+    def validate_payment_date(self, value):
+        """Validate payment date is not in the future"""
+        from datetime import date
+        if value > date.today():
+            raise serializers.ValidationError("Payment date cannot be in the future")
         return value
     
     def validate(self, data):
@@ -565,12 +595,8 @@ class FeePaymentSerializer(serializers.ModelSerializer):
         invoice.paid_amount += payment.amount
         invoice.due_amount -= payment.amount
         
-        # Update status
-        if invoice.due_amount <= 0:
-            invoice.status = 'paid'
-        elif invoice.paid_amount > 0:
-            invoice.status = 'partial'
-        
+        # Update status using the model method
+        invoice.update_status()
         invoice.save()
         return payment
     
@@ -585,14 +611,8 @@ class FeePaymentSerializer(serializers.ModelSerializer):
             invoice.paid_amount += amount_difference
             invoice.due_amount -= amount_difference
             
-            # Update status
-            if invoice.due_amount <= 0:
-                invoice.status = 'paid'
-            elif invoice.paid_amount > 0:
-                invoice.status = 'partial'
-            else:
-                invoice.status = 'pending'
-            
+            # Update status using the model method
+            invoice.update_status()
             invoice.save()
         
         return payment

@@ -140,7 +140,7 @@ class FeePayment(TimeUserStamps):
         ('upi', 'UPI'),
     )
     
-    payment_id = models.CharField(max_length=50, unique=True)
+    payment_id = models.CharField(max_length=50, unique=True, blank=True)
     invoice = models.ForeignKey(FeeInvoice, on_delete=models.CASCADE, related_name='payments')
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     payment_date = models.DateField()
@@ -153,7 +153,37 @@ class FeePayment(TimeUserStamps):
     class Meta:
         db_table = 'fee_payments'
         ordering = ['-created_at']
-
+    
+    def save(self, *args, **kwargs):
+        if not self.payment_id:
+            self.payment_id = self.generate_payment_id()
+        super().save(*args, **kwargs)
+    
+    def generate_payment_id(self):
+        """
+        Generate sequential payment ID per academic year
+        Format: PAY-2024-25-0001, PAY-2024-25-0002, etc.
+        """
+        # Get academic year code from the invoice
+        academic_year_code = self.invoice.academic_year.code
+        
+        # Get the last payment ID for this academic year
+        last_payment = FeePayment.objects.filter(
+            invoice__academic_year=self.invoice.academic_year,
+            payment_id__startswith=f"PAY-{academic_year_code}-"
+        ).order_by('-payment_id').first()
+        
+        if last_payment:
+            try:
+                # Extract the sequential number from last payment
+                last_number = int(last_payment.payment_id.split('-')[-1])
+                new_number = last_number + 1
+            except (ValueError, IndexError):
+                new_number = 1
+        else:
+            new_number = 1
+        
+        return f"PAY-{academic_year_code}-{new_number:04d}"
 
 class FeeDiscount(TimeUserStamps):
     """Fee Discounts/Scholarships"""
