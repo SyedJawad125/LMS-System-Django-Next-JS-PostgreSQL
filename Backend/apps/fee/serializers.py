@@ -639,10 +639,14 @@ class FeePaymentSerializer(serializers.ModelSerializer):
 
 class FeeDiscountListingSerializer(serializers.ModelSerializer):
     """Minimal serializer for fee discount listings"""
+    students_count = serializers.SerializerMethodField()
     
     class Meta:
         model = FeeDiscount
-        fields = ['id', 'name', 'discount_type', 'value', 'is_active']
+        fields = ['id', 'name', 'discount_type', 'value', 'is_global', 'is_active', 'students_count']
+    
+    def get_students_count(self, obj):
+        return obj.get_students_count()
 
 
 class FeeDiscountSerializer(serializers.ModelSerializer):
@@ -651,13 +655,14 @@ class FeeDiscountSerializer(serializers.ModelSerializer):
     updated_by = serializers.SerializerMethodField()
     applicable_fee_types_detail = serializers.SerializerMethodField()
     students_count = serializers.SerializerMethodField()
+    students_detail = serializers.SerializerMethodField()
     
     class Meta:
         model = FeeDiscount
         fields = [
             'id', 'name', 'discount_type', 'value', 'applicable_fee_types',
-            'description', 'is_active',
-            'applicable_fee_types_detail', 'students_count',
+            'students', 'is_global', 'description', 'is_active',
+            'applicable_fee_types_detail', 'students_count', 'students_detail',
             'created_by', 'updated_by', 'created_at', 'updated_at'
         ]
         read_only_fields = ('created_at', 'updated_at', 'created_by', 'updated_by')
@@ -679,20 +684,25 @@ class FeeDiscountSerializer(serializers.ModelSerializer):
         return FeeTypeListingSerializer(fee_types, many=True).data
     
     def get_students_count(self, obj):
-        if obj.deleted:
-            return 0
-        return obj.studentdiscount_set.filter(deleted=False).count()
+        return obj.get_students_count()
+    
+    def get_students_detail(self, obj):
+        """Get student details for specific discounts"""
+        if not obj.is_global and obj.students.exists():
+            students = obj.students.filter(deleted=False)
+            return StudentListingSerializer(students, many=True).data
+        return []
     
     def validate_name(self, value):
         if len(value.strip()) < 2:
             raise serializers.ValidationError("Discount name must be at least 2 characters long")
         
-        qs = FeeDiscount.objects.filter(name__iexact=value.strip(), deleted=False)
-        if self.instance:
-            qs = qs.exclude(id=self.instance.id)
+        # qs = FeeDiscount.objects.filter(name__iexact=value.strip(), deleted=False)
+        # if self.instance:
+        #     qs = qs.exclude(id=self.instance.id)
         
-        if qs.exists():
-            raise serializers.ValidationError(f"Discount with name '{value}' already exists")
+        # if qs.exists():
+        #     raise serializers.ValidationError(f"Discount with name '{value}' already exists")
         
         return value.strip()
     
@@ -705,12 +715,25 @@ class FeeDiscountSerializer(serializers.ModelSerializer):
         """Cross-field validation"""
         discount_type = data.get('discount_type', getattr(self.instance, 'discount_type', None))
         value = data.get('value', getattr(self.instance, 'value', None))
+        is_global = data.get('is_global', getattr(self.instance, 'is_global', False))
+        students = data.get('students', [])
         
+        # Validate percentage discount
         if discount_type == 'percentage' and value:
             if value > 100:
                 raise serializers.ValidationError({
                     'value': 'Percentage discount cannot exceed 100%'
                 })
+        
+        # Validate student selection for non-global discounts
+        if not is_global and not students and not self.instance:
+            raise serializers.ValidationError({
+                'students': 'At least one student must be selected for non-global discounts'
+            })
+        
+        # Clear students if it's a global discount
+        if is_global and students:
+            data['students'] = []
         
         return data
     

@@ -185,6 +185,7 @@ class FeePayment(TimeUserStamps):
         
         return f"PAY-{academic_year_code}-{new_number:04d}"
 
+
 class FeeDiscount(TimeUserStamps):
     """Fee Discounts/Scholarships"""
     DISCOUNT_TYPES = (
@@ -196,11 +197,31 @@ class FeeDiscount(TimeUserStamps):
     discount_type = models.CharField(max_length=20, choices=DISCOUNT_TYPES)
     value = models.DecimalField(max_digits=10, decimal_places=2)
     applicable_fee_types = models.ManyToManyField(FeeType)
+    students = models.ManyToManyField(Student, blank=True, related_name='fee_discounts')
+    is_global = models.BooleanField(default=False, help_text="Apply to all students if checked")
     description = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
     
     class Meta:
         db_table = 'fee_discounts'
+    
+    def __str__(self):
+        return f"{self.name} ({'Global' if self.is_global else 'Specific'})"
+    
+    def get_students_count(self):
+        """Get count of eligible students"""
+        if self.is_global:
+            return Student.objects.filter(deleted=False).count()
+        else:
+            return self.students.filter(deleted=False).count()
+    
+    def is_student_eligible(self, student):
+        """Check if a student is eligible for this discount"""
+        if not self.is_active:
+            return False
+        if self.is_global:
+            return True
+        return self.students.filter(id=student.id, deleted=False).exists()
 
 
 class StudentDiscount(TimeUserStamps):
