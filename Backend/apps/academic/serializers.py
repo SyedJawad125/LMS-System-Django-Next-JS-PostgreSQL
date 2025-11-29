@@ -10,7 +10,7 @@ class AcademicYearListingSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = AcademicYear
-        fields = ['id', 'name', 'start_date', 'end_date', 'is_current', 'is_active']
+        fields = ['id', 'name', 'code', 'start_date', 'end_date', 'is_current', 'is_active']
 
 
 class AcademicYearSerializer(serializers.ModelSerializer):
@@ -23,7 +23,7 @@ class AcademicYearSerializer(serializers.ModelSerializer):
     class Meta:
         model = AcademicYear
         fields = [
-            'id', 'name', 'start_date', 'end_date', 'is_current', 'is_active',
+            'id', 'name', 'code', 'start_date', 'end_date', 'is_current', 'is_active',
             'created_by', 'updated_by', 'created_at', 'updated_at',
             'sections_count', 'class_subjects_count'
         ]
@@ -70,19 +70,72 @@ class AcademicYearSerializer(serializers.ModelSerializer):
         
         return value.strip()
     
+    def validate_code(self, value):
+        """Validate academic year code"""
+        if len(value.strip()) < 4:
+            raise serializers.ValidationError("Academic year code must be at least 4 characters long")
+        
+        # Check format (should be like "2024-25")
+        import re
+        if not re.match(r'^\d{4}-\d{2}$', value.strip()):
+            raise serializers.ValidationError("Academic year code must be in format: YYYY-YY (e.g., 2024-25)")
+        
+        # Check for duplicate codes (case-insensitive)
+        qs = AcademicYear.objects.filter(code__iexact=value.strip(), deleted=False)
+        if self.instance:
+            qs = qs.exclude(id=self.instance.id)
+        
+        if qs.exists():
+            raise serializers.ValidationError(f"Academic year with code '{value}' already exists")
+        
+        return value.strip()
+    
     def validate_dates(self, start_date, end_date):
         """Validate start and end dates"""
         if start_date >= end_date:
             raise serializers.ValidationError("End date must be after start date")
+        
+        # Validate code matches dates if both are provided
+        if hasattr(self, 'initial_data') and 'code' in self.initial_data:
+            code = self.initial_data['code']
+            if code and len(code) == 7:  # YYYY-YY format
+                code_start_year = code[:4]
+                code_end_year = '20' + code[5:]  # Convert YY to YYYY
+                
+                if (str(start_date.year) != code_start_year or 
+                    str(end_date.year) != code_end_year):
+                    raise serializers.ValidationError(
+                        f"Code {code} doesn't match dates {start_date.year}-{end_date.year}"
+                    )
+        
         return True
     
     def validate(self, attrs):
         """Cross-field validation"""
         start_date = attrs.get('start_date', self.instance.start_date if self.instance else None)
         end_date = attrs.get('end_date', self.instance.end_date if self.instance else None)
+        name = attrs.get('name', self.instance.name if self.instance else None)
+        code = attrs.get('code', self.instance.code if self.instance else None)
         
         if start_date and end_date:
             self.validate_dates(start_date, end_date)
+        
+        # Auto-generate code if not provided but name is provided
+        if not code and name:
+            # Extract code from name (e.g., "2024-2025" -> "2024-25")
+            if '-' in name:
+                parts = name.split('-')
+                if len(parts) >= 2:
+                    start_year = parts[0].strip()
+                    end_year = parts[1].strip()
+                    if len(end_year) == 4:
+                        attrs['code'] = f"{start_year}-{end_year[2:]}"
+                    else:
+                        attrs['code'] = f"{start_year}-{end_year}"
+        
+        # Auto-generate code from dates if still not available
+        if not attrs.get('code') and start_date and end_date:
+            attrs['code'] = f"{start_date.year}-{str(end_date.year)[-2:]}"
         
         # If setting as current, unset other current academic years
         if attrs.get('is_current', False):
@@ -90,12 +143,24 @@ class AcademicYearSerializer(serializers.ModelSerializer):
         
         return attrs
     
+    def create(self, validated_data):
+        """Ensure code is generated before creation"""
+        if not validated_data.get('code'):
+            # Final fallback - generate from dates
+            start_date = validated_data.get('start_date')
+            end_date = validated_data.get('end_date')
+            if start_date and end_date:
+                validated_data['code'] = f"{start_date.year}-{str(end_date.year)[-2:]}"
+        
+        return super().create(validated_data)
+    
     def to_representation(self, instance):
         """Customize output representation"""
         if instance.deleted:
             return {
                 'id': instance.id,
                 'name': instance.name,
+                'code': instance.code,
                 'message': f'Academic year "{instance.name}" has been deleted successfully'
             }
         

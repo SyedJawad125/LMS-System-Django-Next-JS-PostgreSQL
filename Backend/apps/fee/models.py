@@ -38,6 +38,7 @@ class FeeStructure(TimeUserStamps):
         unique_together = ['class_level', 'academic_year', 'fee_type']
 
 
+
 class FeeInvoice(TimeUserStamps):
     """Student Fee Invoices"""
     STATUS_CHOICES = (
@@ -48,7 +49,7 @@ class FeeInvoice(TimeUserStamps):
         ('cancelled', 'Cancelled'),
     )
     
-    invoice_number = models.CharField(max_length=50, unique=True)
+    invoice_number = models.CharField(max_length=50, unique=True, blank=True)
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='fee_invoices')
     academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE)
     month = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(12)], null=True, blank=True)
@@ -65,8 +66,59 @@ class FeeInvoice(TimeUserStamps):
     class Meta:
         db_table = 'fee_invoices'
         ordering = ['-created_at']
-
-
+    
+    def save(self, *args, **kwargs):
+        if not self.invoice_number:
+            self.invoice_number = self.generate_invoice_number()
+        
+        # Ensure due_amount is calculated before saving
+        if not self.due_amount and self.total_amount is not None:
+            self.due_amount = self.total_amount - (self.discount_amount or 0) - (self.paid_amount or 0)
+        
+        super().save(*args, **kwargs)
+    
+    def generate_invoice_number(self):
+        """
+        Generate clean sequential invoice number per academic year
+        Format: INV-2024-25-0001, INV-2024-25-0002, etc.
+        """
+        academic_year_code = self.academic_year.code
+        
+        # Get the last invoice number for this academic year
+        last_invoice = FeeInvoice.objects.filter(
+            academic_year=self.academic_year,
+            invoice_number__startswith=f"INV-{academic_year_code}-"
+        ).order_by('-invoice_number').first()
+        
+        if last_invoice:
+            try:
+                # Extract the sequential number from last invoice
+                last_number = int(last_invoice.invoice_number.split('-')[-1])
+                new_number = last_number + 1
+            except (ValueError, IndexError):
+                new_number = 1
+        else:
+            new_number = 1
+        
+        return f"INV-{academic_year_code}-{new_number:04d}"
+    
+    def update_status(self):
+        """Update invoice status based on current amounts and due date"""
+        from datetime import date
+        
+        net_amount = self.total_amount - (self.discount_amount or 0)
+        
+        if self.paid_amount >= net_amount:
+            self.status = 'paid'
+        elif self.paid_amount > 0:
+            self.status = 'partial'
+        elif self.due_date and self.due_date < date.today():
+            self.status = 'overdue'
+        else:
+            self.status = 'pending'
+        
+        self.save()
+        
 class FeeInvoiceItem(TimeUserStamps):
     """Individual Fee Items in Invoice"""
     invoice = models.ForeignKey(FeeInvoice, on_delete=models.CASCADE, related_name='items')

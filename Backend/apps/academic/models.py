@@ -8,6 +8,7 @@ from utils.reusable_classes import TimeUserStamps
 class AcademicYear(TimeUserStamps):
     """Academic Year Management"""
     name = models.CharField(max_length=50, unique=True)  # e.g., "2023-2024"
+    code = models.CharField(max_length=20, null=True, blank=True)  # e.g., "2023-24"
     start_date = models.DateField()
     end_date = models.DateField()
     is_current = models.BooleanField(default=False)
@@ -16,6 +17,32 @@ class AcademicYear(TimeUserStamps):
     class Meta:
         db_table = 'academic_years'
         ordering = ['-start_date']
+    
+    def save(self, *args, **kwargs):
+        if not self.code:
+            # Auto-generate code from name or dates
+            self.code = self.generate_code()
+        super().save(*args, **kwargs)
+    
+    def generate_code(self):
+        """Generate code from name or dates"""
+        # Try to extract from name first
+        if '-' in self.name:
+            parts = self.name.split('-')
+            if len(parts) >= 2:
+                start_year = parts[0].strip()
+                end_year = parts[1].strip()
+                if len(end_year) == 4:
+                    return f"{start_year}-{end_year[2:]}"
+                return f"{start_year}-{end_year}"
+        
+        # Fallback to dates
+        start_year = self.start_date.year
+        end_year = self.end_date.year
+        return f"{start_year}-{str(end_year)[-2:]}"
+    
+    def __str__(self):
+        return f"{self.name} ({self.code})"
 
 
 class Department(TimeUserStamps):

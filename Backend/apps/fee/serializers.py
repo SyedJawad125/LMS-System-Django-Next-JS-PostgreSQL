@@ -1,3 +1,4 @@
+from datetime import date
 from rest_framework import serializers
 from django.core.validators import MinValueValidator, MaxValueValidator
 from .models import (
@@ -290,7 +291,7 @@ class FeeInvoiceSerializer(serializers.ModelSerializer):
             'student_detail', 'academic_year_detail', 'items', 'payments_count',
             'balance_amount', 'created_by', 'updated_by', 'created_at', 'updated_at'
         ]
-        read_only_fields = ('created_at', 'updated_at', 'created_by', 'updated_by')
+        read_only_fields = ('invoice_number', 'due_amount', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by')
     
     def get_created_by(self, obj):
         if obj.created_by:
@@ -311,6 +312,7 @@ class FeeInvoiceSerializer(serializers.ModelSerializer):
     
     def get_academic_year_detail(self, obj):
         if obj.academic_year and not obj.academic_year.deleted:
+            # Now includes code field in the response
             return AcademicYearListingSerializer(obj.academic_year).data
         return None
     
@@ -322,19 +324,6 @@ class FeeInvoiceSerializer(serializers.ModelSerializer):
     def get_balance_amount(self, obj):
         return obj.due_amount
     
-    def validate_invoice_number(self, value):
-        if len(value.strip()) < 3:
-            raise serializers.ValidationError("Invoice number must be at least 3 characters long")
-        
-        qs = FeeInvoice.objects.filter(invoice_number__iexact=value.strip(), deleted=False)
-        if self.instance:
-            qs = qs.exclude(id=self.instance.id)
-        
-        if qs.exists():
-            raise serializers.ValidationError(f"Invoice number '{value}' already exists")
-        
-        return value.strip()
-    
     def validate_student(self, value):
         if value.deleted:
             raise serializers.ValidationError("Cannot create invoice for a deleted student")
@@ -343,11 +332,25 @@ class FeeInvoiceSerializer(serializers.ModelSerializer):
     def validate_academic_year(self, value):
         if value.deleted:
             raise serializers.ValidationError("Cannot use a deleted academic year")
+        
+        # Ensure academic_year has code field populated
+        if not value.code:
+            raise serializers.ValidationError("Selected academic year must have a code field populated")
+        
         return value
     
     def validate_month(self, value):
         if value is not None and (value < 1 or value > 12):
             raise serializers.ValidationError("Month must be between 1 and 12")
+        return value
+    
+    def validate_year(self, value):
+        """Validate year field consistency with academic_year"""
+        academic_year = self.initial_data.get('academic_year')
+        if academic_year:
+            # You might want to validate that the year matches the academic year
+            # For example, if academic_year is 2024-25, year should be 2024 or 2025
+            pass
         return value
     
     def validate_total_amount(self, value):
@@ -363,6 +366,12 @@ class FeeInvoiceSerializer(serializers.ModelSerializer):
     def validate_paid_amount(self, value):
         if value < 0:
             raise serializers.ValidationError("Paid amount cannot be negative")
+        return value
+    
+    def validate_due_date(self, value):
+        from datetime import date
+        if value < date.today():
+            raise serializers.ValidationError("Due date cannot be in the past")
         return value
     
     def validate(self, data):
@@ -413,6 +422,34 @@ class FeeInvoiceSerializer(serializers.ModelSerializer):
         
         return data
     
+    def create(self, validated_data):
+        """
+        Ensure due_amount and status are calculated before creation
+        """
+        # Recalculate due_amount to be sure
+        total_amount = validated_data.get('total_amount', 0)
+        discount_amount = validated_data.get('discount_amount', 0)
+        paid_amount = validated_data.get('paid_amount', 0)
+        
+        validated_data['due_amount'] = total_amount - discount_amount - paid_amount
+        
+        # Ensure status is set
+        if 'status' not in validated_data:
+            net_amount = total_amount - discount_amount
+            if paid_amount >= net_amount:
+                validated_data['status'] = 'paid'
+            elif paid_amount > 0:
+                validated_data['status'] = 'partial'
+            else:
+                from datetime import date
+                due_date = validated_data.get('due_date')
+                if due_date and due_date < date.today():
+                    validated_data['status'] = 'overdue'
+                else:
+                    validated_data['status'] = 'pending'
+        
+        return super().create(validated_data)
+    
     def to_representation(self, instance):
         if instance.deleted:
             return {
@@ -429,8 +466,6 @@ class FeeInvoiceSerializer(serializers.ModelSerializer):
             data['updated_at'] = data['updated_at'].replace('T', ' ').split('.')[0]
         
         return data
-
-
 # ==================== Fee Payment Serializers ====================
 
 class FeePaymentListingSerializer(serializers.ModelSerializer):
