@@ -760,18 +760,72 @@ class FeeDiscountSerializer(serializers.ModelSerializer):
 class StudentDiscountListingSerializer(serializers.ModelSerializer):
     """Minimal serializer for student discount listings"""
     student_name = serializers.SerializerMethodField()
+    student_admission = serializers.SerializerMethodField()
+    student_roll = serializers.SerializerMethodField()
     discount_name = serializers.CharField(source='discount.name', read_only=True)
+    discount_type = serializers.CharField(source='discount.discount_type', read_only=True)
+    discount_value = serializers.CharField(source='discount.value', read_only=True)
+    status = serializers.SerializerMethodField()
     
     class Meta:
         model = StudentDiscount
-        fields = ['id', 'student_name', 'discount_name', 'start_date', 'end_date']
+        fields = [
+            'id', 'student_name', 'student_admission', 'student_roll',
+            'discount_name', 'discount_type', 'discount_value', 
+            'start_date', 'end_date', 'status'
+        ]
     
     def get_student_name(self, obj):
-        if obj.student and obj.student.user:
-            full_name = obj.student.user.get_full_name()
-            return full_name.strip() if full_name and full_name.strip() else obj.student.user.username
-        return None
+        """Get student name from user model"""
+        if obj.student and not obj.student.deleted:
+            if hasattr(obj.student, 'user') and obj.student.user:
+                full_name = obj.student.user.get_full_name()
+                return full_name.strip() if full_name and full_name.strip() else obj.student.user.username
+        return "Unknown Student"
+    
+    def get_student_admission(self, obj):
+        """Get student admission number"""
+        if obj.student and not obj.student.deleted:
+            if hasattr(obj.student, 'admission_number') and obj.student.admission_number:
+                return obj.student.admission_number
+        return "N/A"
+    
+    def get_student_roll(self, obj):
+        """Get student roll number"""
+        if obj.student and not obj.student.deleted:
+            if hasattr(obj.student, 'roll_number') and obj.student.roll_number:
+                return obj.student.roll_number
+        return "N/A"
+    
+    def get_status(self, obj):
+        """Get human-readable status"""
+        from datetime import date
+        today = date.today()
+        
+        if obj.start_date > today:
+            return 'Scheduled'
+        elif obj.end_date and obj.end_date < today:
+            return 'Expired'
+        elif obj.start_date <= today and (not obj.end_date or obj.end_date >= today):
+            return 'Active'
+        return 'Unknown'
+    
+    def to_representation(self, instance):
+        """Customize output representation for listing"""
+        if instance.deleted:
+            # Use the same identifier logic for consistency
+            serializer = StudentDiscountSerializer()
+            student_identifier = serializer.get_student_identifier(instance)
+            
+            return {
+                'id': instance.id,
+                'message': f'Student discount for {student_identifier} has been deleted successfully'
+            }
+        
+        data = super().to_representation(instance)
+        return data
 
+from django.core.exceptions import ObjectDoesNotExist
 
 class StudentDiscountSerializer(serializers.ModelSerializer):
     """Full student discount serializer with validations"""
@@ -816,5 +870,133 @@ class StudentDiscountSerializer(serializers.ModelSerializer):
             return FeeDiscountListingSerializer(obj.discount).data
         return None
     
-    # def get_academic_year_detail(self, obj):
-    #     if obj.academic_year and not obj.
+    def get_academic_year_detail(self, obj):
+        if obj.academic_year and not obj.academic_year.deleted:
+            return AcademicYearListingSerializer(obj.academic_year).data
+        return None
+    
+    def get_approved_by_detail(self, obj):
+        if obj.approved_by and not obj.approved_by.deleted:
+            return UserListSerializer(obj.approved_by).data
+        return None
+    
+    def get_is_active(self, obj):
+        """Check if discount is currently active"""
+        from datetime import date
+        today = date.today()
+        
+        if obj.start_date > today:
+            return False  # Not started yet
+        if obj.end_date and obj.end_date < today:
+            return False  # Expired
+        return True  # Active
+    
+    def validate_start_date(self, value):
+        """Validate start date"""
+        from datetime import date
+        if value < date.today():
+            raise serializers.ValidationError("Start date cannot be in the past")
+        return value
+    
+    def validate(self, data):
+        """Cross-field validation"""
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
+        
+        if end_date and start_date and end_date < start_date:
+            raise serializers.ValidationError({
+                'end_date': 'End date must be after start date'
+            })
+        
+        return data
+    
+    def to_representation(self, instance):
+        """Customize output representation"""
+        if instance.deleted:
+            # Safe way to handle deleted objects with admission_number and roll_number
+            student_identifier = self.get_student_identifier(instance)
+            
+            return {
+                'id': instance.id,
+                'student': instance.student_id,
+                'discount': instance.discount_id,
+                'message': f'Student discount for {student_identifier} has been deleted successfully'
+            }
+        
+        data = super().to_representation(instance)
+        
+        # Format datetime fields
+        if isinstance(data.get('created_at'), str):
+            data['created_at'] = data['created_at'].replace('T', ' ').split('.')[0]
+        if isinstance(data.get('updated_at'), str):
+            data['updated_at'] = data['updated_at'].replace('T', ' ').split('.')[0]
+        
+        # Add additional calculated fields
+        data['days_remaining'] = self.get_days_remaining(instance)
+        data['status'] = self.get_status(instance)
+        
+        return data
+    
+    def get_student_identifier(self, instance):
+        """Safely get student identifier using admission_number and roll_number"""
+        if not instance.student_id:
+            return "student"
+        
+        try:
+            student = instance.student
+            if student.deleted:
+                # Student is also deleted, use stored IDs
+                if hasattr(student, 'admission_number') and student.admission_number:
+                    return f"Student ({student.admission_number})"
+                else:
+                    return f"Student {instance.student_id}"
+            
+            # Student exists, try to get identifiers
+            identifiers = []
+            
+            if hasattr(student, 'admission_number') and student.admission_number:
+                identifiers.append(f"Admission: {student.admission_number}")
+            
+            if hasattr(student, 'roll_number') and student.roll_number:
+                identifiers.append(f"Roll: {student.roll_number}")
+            
+            if hasattr(student, 'user') and student.user:
+                full_name = student.user.get_full_name()
+                if full_name and full_name.strip():
+                    identifiers.append(full_name.strip())
+                elif student.user.username:
+                    identifiers.append(student.user.username)
+            
+            if identifiers:
+                return ", ".join(identifiers)
+            else:
+                return f"Student {instance.student_id}"
+                
+        except (AttributeError, ObjectDoesNotExist):
+            # Fallback if any attribute access fails
+            return f"Student {instance.student_id}"
+    
+    def get_days_remaining(self, instance):
+        """Calculate days remaining for active discounts"""
+        from datetime import date
+        today = date.today()
+        
+        if instance.end_date:
+            if instance.end_date < today:
+                return 0  # Expired
+            elif instance.start_date <= today <= instance.end_date:
+                return (instance.end_date - today).days
+        return None  # No end date or not started
+    
+    def get_status(self, instance):
+        """Get human-readable status"""
+        from datetime import date
+        today = date.today()
+        
+        if instance.start_date > today:
+            return 'scheduled'
+        elif instance.end_date and instance.end_date < today:
+            return 'expired'
+        elif instance.start_date <= today and (not instance.end_date or instance.end_date >= today):
+            return 'active'
+        return 'unknown'
