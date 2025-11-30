@@ -242,3 +242,20 @@ CREATE_STUDENT_DISCOUNT = "create_student_discount"
 READ_STUDENT_DISCOUNT = "read_student_discount"
 UPDATE_STUDENT_DISCOUNT = "update_student_discount"
 DELETE_STUDENT_DISCOUNT = "delete_student_discount"
+
+# Transport Permissions
+CREATE_ROUTE = "create_route"
+READ_ROUTE = "read_route"
+UPDATE_ROUTE = "update_route"
+DELETE_ROUTE = "delete_route"
+
+CREATE_VEHICLE = "create_vehicle"
+READ_VEHICLE = "read_vehicle"
+UPDATE_VEHICLE = "update_vehicle"
+DELETE_VEHICLE = "delete_vehicle"
+
+CREATE_TRANSPORT_ALLOCATION = "create_transport_allocation"
+READ_TRANSPORT_ALLOCATION = "read_transport_allocation"
+UPDATE_TRANSPORT_ALLOCATION = "update_transport_allocation"
+DELETE_TRANSPORT_ALLOCATION = "delete_transport_allocation"
+

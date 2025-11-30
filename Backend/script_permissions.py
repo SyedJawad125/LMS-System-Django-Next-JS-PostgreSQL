@@ -292,6 +292,23 @@ permissions = [
         Permission(name='Update Student Discount', code_name='update_student_discount', module_name='Student Discount', module_label='Fee Management', description='User can update Student Discount'),
         Permission(name='Delete Student Discount', code_name='delete_student_discount', module_name='Student Discount', module_label='Fee Management', description='User can delete Student Discount'),
 
+        # ---------- Transport Route ----------
+        Permission(name='Create Route', code_name='create_route', module_name='Route', module_label='Transport Management', description='User can create Route'),
+        Permission(name='Read Route', code_name='read_route', module_name='Route', module_label='Transport Management', description='User can read Route'),
+        Permission(name='Update Route', code_name='update_route', module_name='Route', module_label='Transport Management', description='User can update Route'),
+        Permission(name='Delete Route', code_name='delete_route', module_name='Route', module_label='Transport Management', description='User can delete Route'),
+
+        # ---------- Transport Vehicle ----------
+        Permission(name='Create Vehicle', code_name='create_vehicle', module_name='Vehicle', module_label='Transport Management', description='User can create Vehicle'),
+        Permission(name='Read Vehicle', code_name='read_vehicle', module_name='Vehicle', module_label='Transport Management', description='User can read Vehicle'),
+        Permission(name='Update Vehicle', code_name='update_vehicle', module_name='Vehicle', module_label='Transport Management', description='User can update Vehicle'),
+        Permission(name='Delete Vehicle', code_name='delete_vehicle', module_name='Vehicle', module_label='Transport Management', description='User can delete Vehicle'),
+
+        # ---------- Transport Allocation ----------
+        Permission(name='Create Transport Allocation', code_name='create_transport_allocation', module_name='Transport Allocation', module_label='Transport Management', description='User can create Transport Allocation'),
+        Permission(name='Read Transport Allocation', code_name='read_transport_allocation', module_name='Transport Allocation', module_label='Transport Management', description='User can read Transport Allocation'),
+        Permission(name='Update Transport Allocation', code_name='update_transport_allocation', module_name='Transport Allocation', module_label='Transport Management', description='User can update Transport Allocation'),
+        Permission(name='Delete Transport Allocation', code_name='delete_transport_allocation', module_name='Transport Allocation', module_label='Transport Management', description='User can delete Transport Allocation'),
 ]
 
 
