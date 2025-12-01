@@ -336,3 +336,15 @@ CREATE_QUIZ_ANSWER = 'create_quiz_answer'
 READ_QUIZ_ANSWER = 'read_quiz_answer'
 UPDATE_QUIZ_ANSWER = 'update_quiz_answer'
 DELETE_QUIZ_ANSWER = 'delete_quiz_answer'
+
+# Assignment Permissions
+CREATE_ASSIGNMENT = 'create_assignment'
+READ_ASSIGNMENT = 'read_assignment'
+UPDATE_ASSIGNMENT = 'update_assignment'
+DELETE_ASSIGNMENT = 'delete_assignment'
+
+# AssignmentSubmission Permissions
+CREATE_SUBMISSION = 'create_submission'
+READ_SUBMISSION = 'read_submission'
+UPDATE_SUBMISSION = 'update_submission'
+DELETE_SUBMISSION = 'delete_submission'

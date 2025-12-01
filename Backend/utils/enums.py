@@ -300,3 +300,8 @@ ESSAY = 'essay'
 IN_PROGRESS = 'in_progress'
 SUBMITTED = 'submitted'
 GRADED = 'graded'
+
+PENDING = 'pending'
+SUBMITTED = 'submitted'
+GRADED = 'graded'
+LATE_SUBMISSION = 'late_submission'

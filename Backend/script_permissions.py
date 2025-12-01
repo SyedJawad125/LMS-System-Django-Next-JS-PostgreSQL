@@ -387,6 +387,18 @@ permissions = [
         Permission(name='Read Quiz Answer', code_name='read_quiz_answer', module_name='QuizAnswer', module_label='Student Assessment', description='User can read Quiz Answer'),
         Permission(name='Update Quiz Answer', code_name='update_quiz_answer', module_name='QuizAnswer', module_label='Student Assessment', description='User can update Quiz Answer'),
         Permission(name='Delete Quiz Answer', code_name='delete_quiz_answer', module_name='QuizAnswer', module_label='Student Assessment', description='User can delete Quiz Answer'),
+
+        # Assignment Permissions
+        Permission(name='Create Assignment', code_name='create_assignment', module_name='Assignment', module_label='Assignments', description='User can create assignments'),
+        Permission(name='Read Assignment', code_name='read_assignment', module_name='Assignment', module_label='Assignments', description='User can read/view assignments'),
+        Permission(name='Update Assignment', code_name='update_assignment', module_name='Assignment', module_label='Assignments', description='User can update assignments'),
+        Permission(name='Delete Assignment', code_name='delete_assignment', module_name='Assignment', module_label='Assignments', description='User can delete assignments'),
+
+        # AssignmentSubmission Permissions
+        Permission(name='Create Submission', code_name='create_submission', module_name='AssignmentSubmission', module_label='Student Submissions', description='User can submit assignments'),
+        Permission(name='Read Submission', code_name='read_submission', module_name='AssignmentSubmission', module_label='Student Submissions', description='User can view assignment submissions'),
+        Permission(name='Update Submission', code_name='update_submission', module_name='AssignmentSubmission', module_label='Student Submissions', description='User can update assignment submissions'),
+        Permission(name='Delete Submission', code_name='delete_submission', module_name='AssignmentSubmission', module_label='Student Submissions', description='User can delete assignment submissions'),
 ]
 
 
