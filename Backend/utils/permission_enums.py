@@ -259,3 +259,26 @@ READ_TRANSPORT_ALLOCATION = "read_transport_allocation"
 UPDATE_TRANSPORT_ALLOCATION = "update_transport_allocation"
 DELETE_TRANSPORT_ALLOCATION = "delete_transport_allocation"
 
+# Announcement Permissions
+CREATE_ANNOUNCEMENT = 'create_announcement'
+READ_ANNOUNCEMENT = 'read_announcement'
+UPDATE_ANNOUNCEMENT = 'update_announcement'
+DELETE_ANNOUNCEMENT = 'delete_announcement'
+
+# Event Permissions
+CREATE_EVENT = 'create_event'
+READ_EVENT = 'read_event'
+UPDATE_EVENT = 'update_event'
+DELETE_EVENT = 'delete_event'
+
+# Message Permissions
+CREATE_MESSAGE = 'create_message'
+READ_MESSAGE = 'read_message'
+UPDATE_MESSAGE = 'update_message'
+DELETE_MESSAGE = 'delete_message'
+
+# Notification Permissions
+CREATE_NOTIFICATION = 'create_notification'
+READ_NOTIFICATION = 'read_notification'
+UPDATE_NOTIFICATION = 'update_notification'
+DELETE_NOTIFICATION = 'delete_notification'

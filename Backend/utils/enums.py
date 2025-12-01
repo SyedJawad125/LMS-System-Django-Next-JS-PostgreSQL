@@ -255,3 +255,32 @@ UTC = "UTC"
 STUDENT = 'student'
 TEACHER = 'teacher'
 PARENT = 'parent'
+
+# Define constants (lowercase)
+GENERAL = 'general'
+URGENT = 'urgent'
+EVENT = 'event'
+HOLIDAY = 'holiday'
+EXAM = 'exam'
+EXAMINATION = 'Examination'
+
+ALL = 'all'
+STUDENTS = 'students'
+PARENTS = 'parents'
+TEACHERS = 'teachers'
+SPECIFIC_CLASS = 'specific_class'
+
+# Event type constants
+ACADEMIC = 'academic'
+SPORTS = 'sports'
+CULTURAL = 'cultural'
+EXCURSION = 'excursion'
+MEETING = 'meeting'
+OTHER = 'other'
+
+# Notification type constants
+FEE_DUE = 'fee_due'
+ATTENDANCE_LOW = 'attendance_low'
+EXAM_SCHEDULE = 'exam_schedule'
+RESULT_PUBLISHED = 'result_published'
+MESSAGE = 'message'

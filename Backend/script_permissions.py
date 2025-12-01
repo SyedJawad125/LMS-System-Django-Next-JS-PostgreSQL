@@ -309,6 +309,30 @@ permissions = [
         Permission(name='Read Transport Allocation', code_name='read_transport_allocation', module_name='Transport Allocation', module_label='Transport Management', description='User can read Transport Allocation'),
         Permission(name='Update Transport Allocation', code_name='update_transport_allocation', module_name='Transport Allocation', module_label='Transport Management', description='User can update Transport Allocation'),
         Permission(name='Delete Transport Allocation', code_name='delete_transport_allocation', module_name='Transport Allocation', module_label='Transport Management', description='User can delete Transport Allocation'),
+
+        # Announcement Permissions
+        Permission(name='Create Announcement', code_name='create_announcement', module_name='Announcement', module_label='Communication Management', description='User can create Announcement'),
+        Permission(name='Read Announcement', code_name='read_announcement', module_name='Announcement', module_label='Communication Management', description='User can read Announcement'),
+        Permission(name='Update Announcement', code_name='update_announcement', module_name='Announcement', module_label='Communication Management', description='User can update Announcement'),
+        Permission(name='Delete Announcement', code_name='delete_announcement', module_name='Announcement', module_label='Communication Management', description='User can delete Announcement'),
+
+        # Event Permissions
+        Permission(name='Create Event', code_name='create_event', module_name='Event', module_label='Communication Management', description='User can create Event'),
+        Permission(name='Read Event', code_name='read_event', module_name='Event', module_label='Communication Management', description='User can read Event'),
+        Permission(name='Update Event', code_name='update_event', module_name='Event', module_label='Communication Management', description='User can update Event'),
+        Permission(name='Delete Event', code_name='delete_event', module_name='Event', module_label='Communication Management', description='User can delete Event'),
+
+        # Message Permissions
+        Permission(name='Create Message', code_name='create_message', module_name='Message', module_label='Communication Management', description='User can create Message'),
+        Permission(name='Read Message', code_name='read_message', module_name='Message', module_label='Communication Management', description='User can read Message'),
+        Permission(name='Update Message', code_name='update_message', module_name='Message', module_label='Communication Management', description='User can update Message'),
+        Permission(name='Delete Message', code_name='delete_message', module_name='Message', module_label='Communication Management', description='User can delete Message'),
+
+        # Notification Permissions
+        Permission(name='Create Notification', code_name='create_notification', module_name='Notification', module_label='Communication Management', description='User can create Notification'),
+        Permission(name='Read Notification', code_name='read_notification', module_name='Notification', module_label='Communication Management', description='User can read Notification'),
+        Permission(name='Update Notification', code_name='update_notification', module_name='Notification', module_label='Communication Management', description='User can update Notification'),
+        Permission(name='Delete Notification', code_name='delete_notification', module_name='Notification', module_label='Communication Management', description='User can delete Notification'),
 ]
 
 
