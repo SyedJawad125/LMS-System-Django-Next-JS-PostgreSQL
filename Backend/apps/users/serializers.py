@@ -620,7 +620,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 #         return data
 
 
-class StudentListingSerializer(serializers.ModelSerializer):
+class StudentListSerializer(serializers.ModelSerializer):
     """Simplified serializer for student listings"""
     full_name = serializers.SerializerMethodField()
     email = serializers.SerializerMethodField()
@@ -641,6 +641,7 @@ class StudentListingSerializer(serializers.ModelSerializer):
     
     def get_mobile(self, obj):
         return obj.user.mobile if obj.user else None
+
 
 
 class StudentSerializer(serializers.ModelSerializer):

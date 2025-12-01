@@ -71,14 +71,14 @@ class NotificationFilter(filters.FilterSet):
     search = filters.CharFilter(method='filter_search')
     title = filters.CharFilter(field_name='title', lookup_expr='icontains')
     notification_type = filters.CharFilter(field_name='notification_type')
-    user = filters.NumberFilter(field_name='user')
+    student = filters.NumberFilter(field_name='student')
     is_read = filters.BooleanFilter(field_name='is_read')
     start_date = filters.DateFilter(field_name='created_at', lookup_expr='gte')
     end_date = filters.DateFilter(field_name='created_at', lookup_expr='lte')
     
     class Meta:
         model = Notification
-        fields = ['title', 'notification_type', 'user', 'is_read']
+        fields = ['title', 'notification_type', 'student', 'is_read']
     
     def filter_search(self, queryset, name, value):
         return queryset.filter(

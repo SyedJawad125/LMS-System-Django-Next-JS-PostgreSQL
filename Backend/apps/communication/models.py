@@ -1,6 +1,6 @@
 from django.db import models
 
-from apps.users.models import User
+from apps.users.models import Student, User
 from apps.academic.models import Class
 from utils.enums import *
 from utils.reusable_classes import TimeUserStamps
@@ -86,16 +86,16 @@ class Message(TimeUserStamps):
 class Notification(TimeUserStamps):
     """System Notifications"""
     NOTIFICATION_TYPES = (
-        (FEE_DUE, FEE_DUE ),
+        (FEE_DUE, FEE_DUE),
         (ATTENDANCE_LOW, ATTENDANCE_LOW),
         (EXAM_SCHEDULE, EXAM_SCHEDULE),
         (RESULT_PUBLISHED, RESULT_PUBLISHED),
         (ANNOUNCEMENT, ANNOUNCEMENT),
         (EVENT, EVENT),
         (MESSAGE, MESSAGE),
-)
+    )
     
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='notifications')
     notification_type = models.CharField(max_length=30, choices=NOTIFICATION_TYPES)
     title = models.CharField(max_length=200)
     message = models.TextField()

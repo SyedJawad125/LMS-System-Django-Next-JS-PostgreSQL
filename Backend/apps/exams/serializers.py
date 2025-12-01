@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import ExamType, Exam, ExamSchedule, ExamResult, GradeSystem
 from apps.academic.serializers import AcademicYearListingSerializer, ClassListingSerializer, SubjectListingSerializer
-from apps.users.serializers import StudentListingSerializer, TeacherListingSerializer
+from apps.users.serializers import StudentListSerializer, TeacherListingSerializer
 
 
 # ==================== Exam Type Serializers ====================
@@ -450,7 +450,7 @@ class ExamResultSerializer(serializers.ModelSerializer):
     
     def get_student_detail(self, obj):
         if obj.student and not obj.student.deleted:
-            return StudentListingSerializer(obj.student).data
+            return StudentListSerializer(obj.student).data
         return None
     
     def get_entered_by_detail(self, obj):

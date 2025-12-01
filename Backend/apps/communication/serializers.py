@@ -2,8 +2,9 @@ from datetime import date
 from rest_framework import serializers
 from .models import Announcement, Event, Message, Notification
 from apps.academic.serializers import ClassListingSerializer
-from apps.users.serializers import UserListSerializer
-
+from apps.users.serializers import StudentListSerializer, UserListSerializer
+from rest_framework import serializers
+from .models import Notification
 
 # ==================== Announcement Serializers ====================
 
@@ -411,21 +412,24 @@ class MessageSerializer(serializers.ModelSerializer):
 
 # ==================== Notification Serializers ====================
 
+
+
+
 class NotificationListingSerializer(serializers.ModelSerializer):
     """Minimal serializer for notification listings"""
-    user_name = serializers.SerializerMethodField()
+    student_name = serializers.SerializerMethodField()
     
     class Meta:
         model = Notification
         fields = [
-            'id', 'user_name', 'notification_type', 'title',
-            'is_read', 'created_at'
+            'id', 'student', 'student_name', 'notification_type',
+            'title', 'is_read', 'created_at'
         ]
     
-    def get_user_name(self, obj):
-        if obj.user:
-            full_name = obj.user.get_full_name()
-            return full_name.strip() if full_name and full_name.strip() else obj.user.username
+    def get_student_name(self, obj):
+        if obj.student and obj.student.user:
+            full_name = obj.student.user.get_full_name()
+            return full_name.strip() if full_name and full_name.strip() else obj.student.user.username
         return None
 
 
@@ -433,15 +437,14 @@ class NotificationSerializer(serializers.ModelSerializer):
     """Full notification serializer with validations"""
     created_by = serializers.SerializerMethodField()
     updated_by = serializers.SerializerMethodField()
-    user_detail = serializers.SerializerMethodField()
-    time_since = serializers.SerializerMethodField()
+    student_detail = serializers.SerializerMethodField()
     
     class Meta:
         model = Notification
         fields = [
-            'id', 'user', 'notification_type', 'title', 'message',
-            'link', 'is_read', 'user_detail', 'time_since',
-            'created_by', 'updated_by', 'created_at', 'updated_at'
+            'id', 'student', 'notification_type', 'title', 'message',
+            'link', 'is_read', 'created_at',
+            'student_detail', 'created_by', 'updated_by', 'updated_at'
         ]
         read_only_fields = ('created_at', 'updated_at', 'created_by', 'updated_by')
     
@@ -457,41 +460,10 @@ class NotificationSerializer(serializers.ModelSerializer):
             return full_name.strip() if full_name and full_name.strip() else obj.updated_by.username
         return None
     
-    def get_user_detail(self, obj):
-        if obj.user and not obj.user.deleted:
-            return UserListSerializer(obj.user).data
+    def get_student_detail(self, obj):
+        if obj.student and not obj.student.deleted:
+            return StudentListSerializer(obj.student).data
         return None
-    
-    def get_time_since(self, obj):
-        """Calculate human-readable time since notification was created"""
-        from datetime import datetime, timezone
-        
-        # Ensure created_at is timezone-aware
-        now = datetime.now(timezone.utc)
-        created = obj.created_at
-        
-        if created.tzinfo is None:
-            # If created_at is naive, make it aware
-            created = created.replace(tzinfo=timezone.utc)
-        
-        diff = now - created
-        
-        if diff.days > 365:
-            years = diff.days // 365
-            return f"{years} year{'s' if years > 1 else ''} ago"
-        elif diff.days > 30:
-            months = diff.days // 30
-            return f"{months} month{'s' if months > 1 else ''} ago"
-        elif diff.days > 0:
-            return f"{diff.days} day{'s' if diff.days > 1 else ''} ago"
-        elif diff.seconds > 3600:
-            hours = diff.seconds // 3600
-            return f"{hours} hour{'s' if hours > 1 else ''} ago"
-        elif diff.seconds > 60:
-            minutes = diff.seconds // 60
-            return f"{minutes} minute{'s' if minutes > 1 else ''} ago"
-        else:
-            return "Just now"
     
     def validate_title(self, value):
         if len(value.strip()) < 3:
@@ -503,17 +475,14 @@ class NotificationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Message must be at least 10 characters long")
         return value.strip()
     
-    def validate_user(self, value):
+    def validate_student(self, value):
         if value.deleted:
-            raise serializers.ValidationError("Cannot create notification for a deleted user")
+            raise serializers.ValidationError("Cannot create notification for a deleted student")
         return value
     
     def validate_link(self, value):
-        """Validate link format if provided"""
         if value:
-            # Basic URL validation - you can make this more sophisticated
-            if not value.startswith(('/', 'http://', 'https://')):
-                raise serializers.ValidationError("Link must be a valid URL or path")
+            return value.strip()
         return value
     
     def create(self, validated_data):

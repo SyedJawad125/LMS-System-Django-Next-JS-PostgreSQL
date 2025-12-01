@@ -6,7 +6,7 @@ from .models import (
     FeePayment, FeeDiscount, StudentDiscount
 )
 from apps.academic.serializers import AcademicYearListingSerializer, ClassListingSerializer
-from apps.users.serializers import StudentListingSerializer, UserListSerializer
+from apps.users.serializers import StudentListSerializer, UserListSerializer
 
 
 # ==================== Fee Type Serializers ====================
@@ -341,7 +341,7 @@ class FeeInvoiceSerializer(serializers.ModelSerializer):
     
     def get_student_detail(self, obj):
         if obj.student and not obj.student.deleted:
-            return StudentListingSerializer(obj.student).data
+            return StudentListSerializer(obj.student).data
         return None
     
     def get_academic_year_detail(self, obj):
@@ -690,7 +690,7 @@ class FeeDiscountSerializer(serializers.ModelSerializer):
         """Get student details for specific discounts"""
         if not obj.is_global and obj.students.exists():
             students = obj.students.filter(deleted=False)
-            return StudentListingSerializer(students, many=True).data
+            return StudentListSerializer(students, many=True).data
         return []
     
     def validate_name(self, value):
@@ -862,7 +862,7 @@ class StudentDiscountSerializer(serializers.ModelSerializer):
     
     def get_student_detail(self, obj):
         if obj.student and not obj.student.deleted:
-            return StudentListingSerializer(obj.student).data
+            return StudentListSerializer(obj.student).data
         return None
     
     def get_discount_detail(self, obj):
