@@ -282,3 +282,57 @@ CREATE_NOTIFICATION = 'create_notification'
 READ_NOTIFICATION = 'read_notification'
 UPDATE_NOTIFICATION = 'update_notification'
 DELETE_NOTIFICATION = 'delete_notification'
+
+# Course Permissions
+CREATE_COURSE = 'create_course'
+READ_COURSE = 'read_course'
+UPDATE_COURSE = 'update_course'
+DELETE_COURSE = 'delete_course'
+
+# Lesson Permissions
+CREATE_LESSON = 'create_lesson'
+READ_LESSON = 'read_lesson'
+UPDATE_LESSON = 'update_lesson'
+DELETE_LESSON = 'delete_lesson'
+
+# CourseEnrollment Permissions
+CREATE_COURSE_ENROLLMENT = 'create_course_enrollment'
+READ_COURSE_ENROLLMENT = 'read_course_enrollment'
+UPDATE_COURSE_ENROLLMENT = 'update_course_enrollment'
+DELETE_COURSE_ENROLLMENT = 'delete_course_enrollment'
+
+# LessonProgress Permissions
+CREATE_LESSON_PROGRESS = 'create_lesson_progress'
+READ_LESSON_PROGRESS = 'read_lesson_progress'
+UPDATE_LESSON_PROGRESS = 'update_lesson_progress'
+DELETE_LESSON_PROGRESS = 'delete_lesson_progress'
+
+# Quiz Permissions
+CREATE_QUIZ = 'create_quiz'
+READ_QUIZ = 'read_quiz'
+UPDATE_QUIZ = 'update_quiz'
+DELETE_QUIZ = 'delete_quiz'
+
+# Question Permissions
+CREATE_QUESTION = 'create_question'
+READ_QUESTION = 'read_question'
+UPDATE_QUESTION = 'update_question'
+DELETE_QUESTION = 'delete_question'
+
+# QuestionOption Permissions
+CREATE_QUESTION_OPTION = 'create_question_option'
+READ_QUESTION_OPTION = 'read_question_option'
+UPDATE_QUESTION_OPTION = 'update_question_option'
+DELETE_QUESTION_OPTION = 'delete_question_option'
+
+# QuizAttempt Permissions
+CREATE_QUIZ_ATTEMPT = 'create_quiz_attempt'
+READ_QUIZ_ATTEMPT = 'read_quiz_attempt'
+UPDATE_QUIZ_ATTEMPT = 'update_quiz_attempt'
+DELETE_QUIZ_ATTEMPT = 'delete_quiz_attempt'
+
+# QuizAnswer Permissions
+CREATE_QUIZ_ANSWER = 'create_quiz_answer'
+READ_QUIZ_ANSWER = 'read_quiz_answer'
+UPDATE_QUIZ_ANSWER = 'update_quiz_answer'
+DELETE_QUIZ_ANSWER = 'delete_quiz_answer'

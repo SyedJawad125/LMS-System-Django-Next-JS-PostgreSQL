@@ -6,7 +6,7 @@ from .models import (
     DailyAttendance, MonthlyAttendanceReport, 
     AttendanceConfiguration, AttendanceSummary, AttendanceStatus
 )
-from apps.users.serializers import TeacherListingSerializer
+from apps.users.serializers import TeacherListSerializer
 from apps.academic.serializers import SectionListingSerializer, SubjectListingSerializer
 
 
@@ -101,12 +101,12 @@ class DailyAttendanceSerializer(serializers.ModelSerializer):
     
     def get_marked_by_detail(self, obj):
         if obj.marked_by and not obj.marked_by.deleted:
-            return TeacherListingSerializer(obj.marked_by).data
+            return TeacherListSerializer(obj.marked_by).data
         return None
     
     def get_verified_by_detail(self, obj):
         if obj.verified_by and not obj.verified_by.deleted:
-            return TeacherListingSerializer(obj.verified_by).data
+            return TeacherListSerializer(obj.verified_by).data
         return None
     
     def get_attendance_duration_display(self, obj):

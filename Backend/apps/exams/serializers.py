@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import ExamType, Exam, ExamSchedule, ExamResult, GradeSystem
 from apps.academic.serializers import AcademicYearListingSerializer, ClassListingSerializer, SubjectListingSerializer
-from apps.users.serializers import StudentListSerializer, TeacherListingSerializer
+from apps.users.serializers import StudentListSerializer, TeacherListSerializer
 
 
 # ==================== Exam Type Serializers ====================
@@ -455,7 +455,7 @@ class ExamResultSerializer(serializers.ModelSerializer):
     
     def get_entered_by_detail(self, obj):
         if obj.entered_by and not obj.entered_by.deleted:
-            return TeacherListingSerializer(obj.entered_by).data
+            return TeacherListSerializer(obj.entered_by).data
         return None
     
     def get_percentage(self, obj):

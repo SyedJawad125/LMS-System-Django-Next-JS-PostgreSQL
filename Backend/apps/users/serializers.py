@@ -825,7 +825,7 @@ class StudentSerializer(serializers.ModelSerializer):
         return data
 
 
-class TeacherListingSerializer(serializers.ModelSerializer):
+class TeacherListSerializer(serializers.ModelSerializer):
     """Minimal serializer for teacher listings in dropdowns/references"""
     user_name = serializers.SerializerMethodField()
     user_email = serializers.SerializerMethodField()

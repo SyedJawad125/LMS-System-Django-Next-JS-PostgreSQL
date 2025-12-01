@@ -284,3 +284,19 @@ ATTENDANCE_LOW = 'attendance_low'
 EXAM_SCHEDULE = 'exam_schedule'
 RESULT_PUBLISHED = 'result_published'
 MESSAGE = 'message'
+
+# Skill Levels
+BEGINNER = 'beginner'
+INTERMEDIATE = 'intermediate'
+ADVANCED = 'advanced'
+
+# Question Types
+MCQ = 'mcq'
+TRUE_FALSE = 'true_false'
+SHORT_ANSWER = 'short_answer'
+ESSAY = 'essay'
+
+# Status Choices
+IN_PROGRESS = 'in_progress'
+SUBMITTED = 'submitted'
+GRADED = 'graded'

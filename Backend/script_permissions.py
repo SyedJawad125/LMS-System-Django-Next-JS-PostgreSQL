@@ -333,6 +333,60 @@ permissions = [
         Permission(name='Read Notification', code_name='read_notification', module_name='Notification', module_label='Communication Management', description='User can read Notification'),
         Permission(name='Update Notification', code_name='update_notification', module_name='Notification', module_label='Communication Management', description='User can update Notification'),
         Permission(name='Delete Notification', code_name='delete_notification', module_name='Notification', module_label='Communication Management', description='User can delete Notification'),
+
+        # Course Permissions
+        Permission(name='Create Course', code_name='create_course', module_name='Course', module_label='Course Management', description='User can create Course'),
+        Permission(name='Read Course', code_name='read_course', module_name='Course', module_label='Course Management', description='User can read Course'),
+        Permission(name='Update Course', code_name='update_course', module_name='Course', module_label='Course Management', description='User can update Course'),
+        Permission(name='Delete Course', code_name='delete_course', module_name='Course', module_label='Course Management', description='User can delete Course'),
+
+        # Lesson Permissions
+        Permission(name='Create Lesson', code_name='create_lesson', module_name='Lesson', module_label='Course Management', description='User can create Lesson'),
+        Permission(name='Read Lesson', code_name='read_lesson', module_name='Lesson', module_label='Course Management', description='User can read Lesson'),
+        Permission(name='Update Lesson', code_name='update_lesson', module_name='Lesson', module_label='Course Management', description='User can update Lesson'),
+        Permission(name='Delete Lesson', code_name='delete_lesson', module_name='Lesson', module_label='Course Management', description='User can delete Lesson'),
+
+        # CourseEnrollment Permissions
+        Permission(name='Create Course Enrollment', code_name='create_course_enrollment', module_name='CourseEnrollment', module_label='Student Management', description='User can create Course Enrollment'),
+        Permission(name='Read Course Enrollment', code_name='read_course_enrollment', module_name='CourseEnrollment', module_label='Student Management', description='User can read Course Enrollment'),
+        Permission(name='Update Course Enrollment', code_name='update_course_enrollment', module_name='CourseEnrollment', module_label='Student Management', description='User can update Course Enrollment'),
+        Permission(name='Delete Course Enrollment', code_name='delete_course_enrollment', module_name='CourseEnrollment', module_label='Student Management', description='User can delete Course Enrollment'),
+
+        # LessonProgress Permissions
+        Permission(name='Create Lesson Progress', code_name='create_lesson_progress', module_name='LessonProgress', module_label='Student Management', description='User can create Lesson Progress'),
+        Permission(name='Read Lesson Progress', code_name='read_lesson_progress', module_name='LessonProgress', module_label='Student Management', description='User can read Lesson Progress'),
+        Permission(name='Update Lesson Progress', code_name='update_lesson_progress', module_name='LessonProgress', module_label='Student Management', description='User can update Lesson Progress'),
+        Permission(name='Delete Lesson Progress', code_name='delete_lesson_progress', module_name='LessonProgress', module_label='Student Management', description='User can delete Lesson Progress'),
+
+        # Quiz Permissions
+        Permission(name='Create Quiz', code_name='create_quiz', module_name='Quiz', module_label='Assessment Management', description='User can create Quiz'),
+        Permission(name='Read Quiz', code_name='read_quiz', module_name='Quiz', module_label='Assessment Management', description='User can read Quiz'),
+        Permission(name='Update Quiz', code_name='update_quiz', module_name='Quiz', module_label='Assessment Management', description='User can update Quiz'),
+        Permission(name='Delete Quiz', code_name='delete_quiz', module_name='Quiz', module_label='Assessment Management', description='User can delete Quiz'),
+
+        # Question Permissions
+        Permission(name='Create Question', code_name='create_question', module_name='Question', module_label='Assessment Management', description='User can create Question'),
+        Permission(name='Read Question', code_name='read_question', module_name='Question', module_label='Assessment Management', description='User can read Question'),
+        Permission(name='Update Question', code_name='update_question', module_name='Question', module_label='Assessment Management', description='User can update Question'),
+        Permission(name='Delete Question', code_name='delete_question', module_name='Question', module_label='Assessment Management', description='User can delete Question'),
+
+        # QuestionOption Permissions
+        Permission(name='Create Question Option', code_name='create_question_option', module_name='QuestionOption', module_label='Assessment Management', description='User can create Question Option'),
+        Permission(name='Read Question Option', code_name='read_question_option', module_name='QuestionOption', module_label='Assessment Management', description='User can read Question Option'),
+        Permission(name='Update Question Option', code_name='update_question_option', module_name='QuestionOption', module_label='Assessment Management', description='User can update Question Option'),
+        Permission(name='Delete Question Option', code_name='delete_question_option', module_name='QuestionOption', module_label='Assessment Management', description='User can delete Question Option'),
+
+        # QuizAttempt Permissions
+        Permission(name='Create Quiz Attempt', code_name='create_quiz_attempt', module_name='QuizAttempt', module_label='Student Assessment', description='User can create Quiz Attempt'),
+        Permission(name='Read Quiz Attempt', code_name='read_quiz_attempt', module_name='QuizAttempt', module_label='Student Assessment', description='User can read Quiz Attempt'),
+        Permission(name='Update Quiz Attempt', code_name='update_quiz_attempt', module_name='QuizAttempt', module_label='Student Assessment', description='User can update Quiz Attempt'),
+        Permission(name='Delete Quiz Attempt', code_name='delete_quiz_attempt', module_name='QuizAttempt', module_label='Student Assessment', description='User can delete Quiz Attempt'),
+
+        # QuizAnswer Permissions
+        Permission(name='Create Quiz Answer', code_name='create_quiz_answer', module_name='QuizAnswer', module_label='Student Assessment', description='User can create Quiz Answer'),
+        Permission(name='Read Quiz Answer', code_name='read_quiz_answer', module_name='QuizAnswer', module_label='Student Assessment', description='User can read Quiz Answer'),
+        Permission(name='Update Quiz Answer', code_name='update_quiz_answer', module_name='QuizAnswer', module_label='Student Assessment', description='User can update Quiz Answer'),
+        Permission(name='Delete Quiz Answer', code_name='delete_quiz_answer', module_name='QuizAnswer', module_label='Student Assessment', description='User can delete Quiz Answer'),
 ]
 
 

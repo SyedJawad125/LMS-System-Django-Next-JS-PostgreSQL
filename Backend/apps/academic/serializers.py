@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.utils.text import slugify
 from .models import AcademicYear, Department, Class, Section, Subject, ClassSubject
-from apps.users.serializers import TeacherListingSerializer  # Assuming you have this
+from apps.users.serializers import TeacherListSerializer  # Assuming you have this
 
 # ======================= ACADEMIC YEAR SERIALIZERS =======================
 
@@ -215,7 +215,7 @@ class DepartmentSerializer(serializers.ModelSerializer):
     
     def get_head_detail(self, obj):
         if obj.head and not obj.head.deleted:
-            return TeacherListingSerializer(obj.head).data
+            return TeacherListSerializer(obj.head).data
         return None
     
     def get_subjects_count(self, obj):
@@ -425,7 +425,7 @@ class SectionSerializer(serializers.ModelSerializer):
     
     def get_class_teacher_detail(self, obj):
         if obj.class_teacher and not obj.class_teacher.deleted:
-            return TeacherListingSerializer(obj.class_teacher).data
+            return TeacherListSerializer(obj.class_teacher).data
         return None
     
     def get_students_count(self, obj):
@@ -673,7 +673,7 @@ class ClassSubjectSerializer(serializers.ModelSerializer):
     
     def get_teacher_detail(self, obj):
         if obj.teacher and not obj.teacher.deleted:
-            return TeacherListingSerializer(obj.teacher).data
+            return TeacherListSerializer(obj.teacher).data
         return None
     
     def get_academic_year_detail(self, obj):

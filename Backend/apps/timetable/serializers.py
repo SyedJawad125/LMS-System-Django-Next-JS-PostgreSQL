@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import TimeSlot, Timetable
 from apps.academic.serializers import SectionListingSerializer, SubjectListingSerializer
-from apps.users.serializers import TeacherListingSerializer
+from apps.users.serializers import TeacherListSerializer
 
 
 # ==================== TimeSlot Serializers ====================
@@ -197,7 +197,7 @@ class TimetableSerializer(serializers.ModelSerializer):
     
     def get_teacher_detail(self, obj):
         if obj.teacher and not obj.teacher.deleted:
-            return TeacherListingSerializer(obj.teacher).data
+            return TeacherListSerializer(obj.teacher).data
         return None
     
     def get_academic_year_detail(self, obj):
