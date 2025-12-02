@@ -417,6 +417,42 @@ permissions = [
         Permission(name='Read Document', code_name='read_document', module_name='Document', module_label='Student Documents', description='User can view student documents'),
         Permission(name='Update Document', code_name='update_document', module_name='Document', module_label='Student Documents', description='User can update student documents'),
         Permission(name='Delete Document', code_name='delete_document', module_name='Document', module_label='Student Documents', description='User can delete student documents'),
+
+        # Leave Type Permissions
+        Permission(name='Create Leave Type', code_name='create_leave_type', module_name='LeaveType', module_label='Leave Types', description='User can create new leave types'),
+        Permission(name='Read Leave Type', code_name='read_leave_type', module_name='LeaveType', module_label='Leave Types', description='User can view leave types'),
+        Permission(name='Update Leave Type', code_name='update_leave_type', module_name='LeaveType', module_label='Leave Types', description='User can update leave types'),
+        Permission(name='Delete Leave Type', code_name='delete_leave_type', module_name='LeaveType', module_label='Leave Types', description='User can delete leave types'),
+        
+        # Leave Application Permissions
+        Permission(name='Create Leave Application', code_name='create_leave_application', module_name='LeaveApplication', module_label='Leave Applications', description='User can create new leave applications'),
+        Permission(name='Read Leave Application', code_name='read_leave_application', module_name='LeaveApplication', module_label='Leave Applications', description='User can view leave applications'),
+        Permission(name='Update Leave Application', code_name='update_leave_application', module_name='LeaveApplication', module_label='Leave Applications', description='User can update leave applications'),
+        Permission(name='Delete Leave Application', code_name='delete_leave_application', module_name='LeaveApplication', module_label='Leave Applications', description='User can delete leave applications'),
+        
+        # Leave Balance Permissions
+        Permission(name='Create Leave Balance', code_name='create_leave_balance', module_name='LeaveBalance', module_label='Leave Balances', description='User can create new leave balances'),
+        Permission(name='Read Leave Balance', code_name='read_leave_balance', module_name='LeaveBalance', module_label='Leave Balances', description='User can view leave balances'),
+        Permission(name='Update Leave Balance', code_name='update_leave_balance', module_name='LeaveBalance', module_label='Leave Balances', description='User can update leave balances'),
+        Permission(name='Delete Leave Balance', code_name='delete_leave_balance', module_name='LeaveBalance', module_label='Leave Balances', description='User can delete leave balances'),
+        
+        # Leave Configuration Permissions
+        Permission(name='Create Leave Configuration', code_name='create_leave_configuration', module_name='LeaveConfiguration', module_label='Leave Configurations', description='User can create new leave configurations'),
+        Permission(name='Read Leave Configuration', code_name='read_leave_configuration', module_name='LeaveConfiguration', module_label='Leave Configurations', description='User can view leave configurations'),
+        Permission(name='Update Leave Configuration', code_name='update_leave_configuration', module_name='LeaveConfiguration', module_label='Leave Configurations', description='User can update leave configurations'),
+        Permission(name='Delete Leave Configuration', code_name='delete_leave_configuration', module_name='LeaveConfiguration', module_label='Leave Configurations', description='User can delete leave configurations'),
+        
+        # Leave Approval Workflow Permissions
+        Permission(name='Create Leave Approval Workflow', code_name='create_leave_approval_workflow', module_name='LeaveApprovalWorkflow', module_label='Leave Approval Workflows', description='User can create new leave approval workflows'),
+        Permission(name='Read Leave Approval Workflow', code_name='read_leave_approval_workflow', module_name='LeaveApprovalWorkflow', module_label='Leave Approval Workflows', description='User can view leave approval workflows'),
+        Permission(name='Update Leave Approval Workflow', code_name='update_leave_approval_workflow', module_name='LeaveApprovalWorkflow', module_label='Leave Approval Workflows', description='User can update leave approval workflows'),
+        Permission(name='Delete Leave Approval Workflow', code_name='delete_leave_approval_workflow', module_name='LeaveApprovalWorkflow', module_label='Leave Approval Workflows', description='User can delete leave approval workflows'),
+        
+        # Leave History Permissions
+        Permission(name='Read Leave History', code_name='read_leave_history', module_name='LeaveHistory', module_label='Leave Histories', description='User can view leave history/audit trail'),
+        Permission(name='Export Leave History', code_name='export_leave_history', module_name='LeaveHistory', module_label='Leave Histories', description='User can export leave history records'),
+    
+
 ]
 
 

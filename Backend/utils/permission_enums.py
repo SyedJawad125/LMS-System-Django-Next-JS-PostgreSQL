@@ -366,3 +366,127 @@ CREATE_DOCUMENT = 'create_document'
 READ_DOCUMENT = 'read_document'
 UPDATE_DOCUMENT = 'update_document'
 DELETE_DOCUMENT = 'delete_document'
+
+# Leave Type Permissions
+CREATE_LEAVE_TYPE = 'create_leave_type'
+READ_LEAVE_TYPE = 'read_leave_type'
+UPDATE_LEAVE_TYPE = 'update_leave_type'
+DELETE_LEAVE_TYPE = 'delete_leave_type'
+
+# Leave Application Permissions
+CREATE_LEAVE_APPLICATION = 'create_leave_application'
+READ_LEAVE_APPLICATION = 'read_leave_application'
+UPDATE_LEAVE_APPLICATION = 'update_leave_application'
+DELETE_LEAVE_APPLICATION = 'delete_leave_application'
+
+# Leave Balance Permissions
+CREATE_LEAVE_BALANCE = 'create_leave_balance'
+READ_LEAVE_BALANCE = 'read_leave_balance'
+UPDATE_LEAVE_BALANCE = 'update_leave_balance'
+DELETE_LEAVE_BALANCE = 'delete_leave_balance'
+
+# Leave Configuration Permissions
+CREATE_LEAVE_CONFIGURATION = 'create_leave_configuration'
+READ_LEAVE_CONFIGURATION = 'read_leave_configuration'
+UPDATE_LEAVE_CONFIGURATION = 'update_leave_configuration'
+DELETE_LEAVE_CONFIGURATION = 'delete_leave_configuration'
+
+# Leave Approval Workflow Permissions
+CREATE_LEAVE_APPROVAL_WORKFLOW = 'create_leave_approval_workflow'
+READ_LEAVE_APPROVAL_WORKFLOW = 'read_leave_approval_workflow'
+UPDATE_LEAVE_APPROVAL_WORKFLOW = 'update_leave_approval_workflow'
+DELETE_LEAVE_APPROVAL_WORKFLOW = 'delete_leave_approval_workflow'
+
+# Leave History Permissions
+CREATE_LEAVE_HISTORY = 'create_leave_history'
+READ_LEAVE_HISTORY = 'read_leave_history'
+UPDATE_LEAVE_HISTORY = 'update_leave_history'
+DELETE_LEAVE_HISTORY = 'delete_leave_history'
+
+# # Leave Type Permissions
+# CREATE_LEAVE_TYPE = 'create_leave_type'
+# READ_LEAVE_TYPE = 'read_leave_type'
+# UPDATE_LEAVE_TYPE = 'update_leave_type'
+# DELETE_LEAVE_TYPE = 'delete_leave_type'
+
+# # Leave Application Permissions
+# CREATE_LEAVE_APPLICATION = 'create_leave_application'
+# READ_LEAVE_APPLICATION = 'read_leave_application'
+# UPDATE_LEAVE_APPLICATION = 'update_leave_application'
+# DELETE_LEAVE_APPLICATION = 'delete_leave_application'
+# SUBMIT_LEAVE_APPLICATION = 'submit_leave_application'
+# APPROVE_LEAVE_APPLICATION = 'approve_leave_application'
+# REJECT_LEAVE_APPLICATION = 'reject_leave_application'
+# CANCEL_LEAVE_APPLICATION = 'cancel_leave_application'
+# VIEW_OWN_LEAVE_APPLICATION = 'view_own_leave_application'
+# VIEW_DEPARTMENT_LEAVE_APPLICATION = 'view_department_leave_application'
+# VIEW_ALL_LEAVE_APPLICATION = 'view_all_leave_application'
+
+# # Leave Balance Permissions
+# CREATE_LEAVE_BALANCE = 'create_leave_balance'
+# READ_LEAVE_BALANCE = 'read_leave_balance'
+# UPDATE_LEAVE_BALANCE = 'update_leave_balance'
+# DELETE_LEAVE_BALANCE = 'delete_leave_balance'
+# ALLOCATE_LEAVE_BALANCE = 'allocate_leave_balance'
+# RESET_LEAVE_BALANCE = 'reset_leave_balance'
+# VIEW_OWN_LEAVE_BALANCE = 'view_own_leave_balance'
+# VIEW_OTHERS_LEAVE_BALANCE = 'view_others_leave_balance'
+
+# # Leave Configuration Permissions
+# CREATE_LEAVE_CONFIGURATION = 'create_leave_configuration'
+# READ_LEAVE_CONFIGURATION = 'read_leave_configuration'
+# UPDATE_LEAVE_CONFIGURATION = 'update_leave_configuration'
+# DELETE_LEAVE_CONFIGURATION = 'delete_leave_configuration'
+# ACTIVATE_LEAVE_CONFIGURATION = 'activate_leave_configuration'
+# VIEW_LEAVE_CONFIGURATION = 'view_leave_configuration'
+
+# # Leave Approval Workflow Permissions
+# CREATE_LEAVE_APPROVAL_WORKFLOW = 'create_leave_approval_workflow'
+# READ_LEAVE_APPROVAL_WORKFLOW = 'read_leave_approval_workflow'
+# UPDATE_LEAVE_APPROVAL_WORKFLOW = 'update_leave_approval_workflow'
+# DELETE_LEAVE_APPROVAL_WORKFLOW = 'delete_leave_approval_workflow'
+# APPROVE_LEAVE_WORKFLOW = 'approve_leave_workflow'
+# REJECT_LEAVE_WORKFLOW = 'reject_leave_workflow'
+# VIEW_PENDING_APPROVALS = 'view_pending_approvals'
+# VIEW_APPROVAL_HISTORY = 'view_approval_history'
+
+# # Leave History Permissions
+# READ_LEAVE_HISTORY = 'read_leave_history'
+# VIEW_LEAVE_AUDIT_TRAIL = 'view_leave_audit_trail'
+# EXPORT_LEAVE_HISTORY = 'export_leave_history'
+
+# # Leave Report Permissions
+# GENERATE_LEAVE_REPORT = 'generate_leave_report'
+# VIEW_LEAVE_STATISTICS = 'view_leave_statistics'
+# EXPORT_LEAVE_REPORT = 'export_leave_report'
+# VIEW_LEAVE_ANALYTICS = 'view_leave_analytics'
+
+# # Leave Dashboard Permissions
+# VIEW_LEAVE_DASHBOARD = 'view_leave_dashboard'
+# VIEW_ADMIN_LEAVE_DASHBOARD = 'view_admin_leave_dashboard'
+# VIEW_TEACHER_LEAVE_DASHBOARD = 'view_teacher_leave_dashboard'
+# VIEW_STUDENT_LEAVE_DASHBOARD = 'view_student_leave_dashboard'
+
+# # Special Leave Permissions
+# MANAGE_LEAVE_CARRYOVER = 'manage_leave_carryover'
+# APPROVE_LEAVE_CARRYOVER = 'approve_leave_carryover'
+# MANAGE_LEAVE_ENCASHMENT = 'manage_leave_encashment'
+# APPROVE_EMERGENCY_LEAVE = 'approve_emergency_leave'
+# APPROVE_LONG_LEAVE = 'approve_long_leave'
+# VIEW_SENSITIVE_LEAVE_DATA = 'view_sensitive_leave_data'
+
+# # Leave Category Permissions (for role-based access)
+# CAN_APPLY_LEAVE = 'can_apply_leave'
+# CAN_APPROVE_LEAVE = 'can_approve_leave'
+# CAN_MANAGE_LEAVE_SETTINGS = 'can_manage_leave_settings'
+# CAN_VIEW_ALL_LEAVES = 'can_view_all_leaves'
+# CAN_VIEW_DEPARTMENT_LEAVES = 'can_view_department_leaves'
+# CAN_EXPORT_LEAVE_DATA = 'can_export_leave_data'
+
+# # Leave Notification Permissions
+# RECEIVE_LEAVE_NOTIFICATIONS = 'receive_leave_notifications'
+# SEND_LEAVE_NOTIFICATIONS = 'send_leave_notifications'
+# MANAGE_LEAVE_TEMPLATES = 'manage_leave_templates'
+# CONFIGURE_LEAVE_NOTIFICATIONS = 'configure_leave_notifications'
+
+

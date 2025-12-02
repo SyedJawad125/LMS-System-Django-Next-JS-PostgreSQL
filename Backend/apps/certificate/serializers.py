@@ -6,7 +6,7 @@ from apps.users.serializers import StudentListSerializer, UserListSerializer
 
 # ==================== Certificate Template Serializers ====================
 
-class CertificateTemplateListingSerializer(serializers.ModelSerializer):
+class CertificateTemplateListSerializer(serializers.ModelSerializer):
     """Minimal serializer for certificate template listings"""
     
     class Meta:
@@ -106,7 +106,7 @@ class CertificateTemplateSerializer(serializers.ModelSerializer):
 
 # ==================== Certificate Serializers ====================
 
-class CertificateListingSerializer(serializers.ModelSerializer):
+class CertificateListSerializer(serializers.ModelSerializer):
     """Minimal serializer for certificate listings"""
     student_name = serializers.SerializerMethodField()
     template_name = serializers.CharField(source='template.name', read_only=True)
@@ -167,7 +167,7 @@ class CertificateSerializer(serializers.ModelSerializer):
     
     def get_template_detail(self, obj):
         if obj.template and not obj.template.deleted:
-            return CertificateTemplateListingSerializer(obj.template).data
+            return CertificateTemplateListSerializer(obj.template).data
         return None
     
     def get_issued_by_detail(self, obj):
@@ -278,7 +278,7 @@ class CertificateSerializer(serializers.ModelSerializer):
 
 # ==================== Document Serializers ====================
 
-class DocumentListingSerializer(serializers.ModelSerializer):
+class DocumentListSerializer(serializers.ModelSerializer):
     """Minimal serializer for document listings"""
     student_name = serializers.SerializerMethodField()
     uploaded_by_name = serializers.SerializerMethodField()
