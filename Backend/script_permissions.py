@@ -399,6 +399,24 @@ permissions = [
         Permission(name='Read Submission', code_name='read_submission', module_name='AssignmentSubmission', module_label='Student Submissions', description='User can view assignment submissions'),
         Permission(name='Update Submission', code_name='update_submission', module_name='AssignmentSubmission', module_label='Student Submissions', description='User can update assignment submissions'),
         Permission(name='Delete Submission', code_name='delete_submission', module_name='AssignmentSubmission', module_label='Student Submissions', description='User can delete assignment submissions'),
+
+        # CertificateTemplate Permissions
+        Permission(name='Create Certificate Template', code_name='create_certificate_template', module_name='CertificateTemplate', module_label='Certificate Templates', description='User can create certificate templates'),
+        Permission(name='Read Certificate Template', code_name='read_certificate_template', module_name='CertificateTemplate', module_label='Certificate Templates', description='User can view certificate templates'),
+        Permission(name='Update Certificate Template', code_name='update_certificate_template', module_name='CertificateTemplate', module_label='Certificate Templates', description='User can update certificate templates'),
+        Permission(name='Delete Certificate Template', code_name='delete_certificate_template', module_name='CertificateTemplate', module_label='Certificate Templates', description='User can delete certificate templates'),
+
+        # Certificate Permissions
+        Permission(name='Create Certificate', code_name='create_certificate', module_name='Certificate', module_label='Certificates', description='User can issue certificates'),
+        Permission(name='Read Certificate', code_name='read_certificate', module_name='Certificate', module_label='Certificates', description='User can view certificates'),
+        Permission(name='Update Certificate', code_name='update_certificate', module_name='Certificate', module_label='Certificates', description='User can update certificates'),
+        Permission(name='Delete Certificate', code_name='delete_certificate', module_name='Certificate', module_label='Certificates', description='User can delete certificates'),
+
+        # Document Permissions
+        Permission(name='Create Document', code_name='create_document', module_name='Document', module_label='Student Documents', description='User can upload student documents'),
+        Permission(name='Read Document', code_name='read_document', module_name='Document', module_label='Student Documents', description='User can view student documents'),
+        Permission(name='Update Document', code_name='update_document', module_name='Document', module_label='Student Documents', description='User can update student documents'),
+        Permission(name='Delete Document', code_name='delete_document', module_name='Document', module_label='Student Documents', description='User can delete student documents'),
 ]
 
 

@@ -348,3 +348,21 @@ CREATE_SUBMISSION = 'create_submission'
 READ_SUBMISSION = 'read_submission'
 UPDATE_SUBMISSION = 'update_submission'
 DELETE_SUBMISSION = 'delete_submission'
+
+# CertificateTemplate Permissions
+CREATE_CERTIFICATE_TEMPLATE = 'create_certificate_template'
+READ_CERTIFICATE_TEMPLATE = 'read_certificate_template'
+UPDATE_CERTIFICATE_TEMPLATE = 'update_certificate_template'
+DELETE_CERTIFICATE_TEMPLATE = 'delete_certificate_template'
+
+# Certificate Permissions
+CREATE_CERTIFICATE = 'create_certificate'
+READ_CERTIFICATE = 'read_certificate'
+UPDATE_CERTIFICATE = 'update_certificate'
+DELETE_CERTIFICATE = 'delete_certificate'
+
+# Document Permissions
+CREATE_DOCUMENT = 'create_document'
+READ_DOCUMENT = 'read_document'
+UPDATE_DOCUMENT = 'update_document'
+DELETE_DOCUMENT = 'delete_document'

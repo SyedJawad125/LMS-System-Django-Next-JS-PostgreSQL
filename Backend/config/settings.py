@@ -98,6 +98,7 @@ INSTALLED_APPS = [
     'apps.transport',
     'apps.communication',
     'apps.homework_assignments',
+    'apps.certificate',
 
     "drf_spectacular",
     "drf_spectacular_sidecar",
