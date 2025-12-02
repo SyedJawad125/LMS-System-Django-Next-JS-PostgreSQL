@@ -451,9 +451,44 @@ permissions = [
         # Leave History Permissions
         Permission(name='Read Leave History', code_name='read_leave_history', module_name='LeaveHistory', module_label='Leave Histories', description='User can view leave history/audit trail'),
         Permission(name='Export Leave History', code_name='export_leave_history', module_name='LeaveHistory', module_label='Leave Histories', description='User can export leave history records'),
-    
+        
+        # Report Card Permissions
+        Permission(name='Create Report Card', code_name='create_report_card', module_name='ReportCard', module_label='Report Cards', description='User can create new report cards'),
+        Permission(name='Read Report Card', code_name='read_report_card', module_name='ReportCard', module_label='Report Cards', description='User can view report cards'),
+        Permission(name='Update Report Card', code_name='update_report_card', module_name='ReportCard', module_label='Report Cards', description='User can update report cards'),
+        Permission(name='Delete Report Card', code_name='delete_report_card', module_name='ReportCard', module_label='Report Cards', description='User can delete report cards'),
+        
+        # Student Behavior Permissions
+        Permission(name='Create Student Behavior', code_name='create_student_behavior', module_name='StudentBehavior', module_label='Student Behavior Records', description='User can create new student behavior records'),
+        Permission(name='Read Student Behavior', code_name='read_student_behavior', module_name='StudentBehavior', module_label='Student Behavior Records', description='User can view student behavior records'),
+        Permission(name='Update Student Behavior', code_name='update_student_behavior', module_name='StudentBehavior', module_label='Student Behavior Records', description='User can update student behavior records'),
+        Permission(name='Delete Student Behavior', code_name='delete_student_behavior', module_name='StudentBehavior', module_label='Student Behavior Records', description='User can delete student behavior records'),
 
-]
+        # School Settings Permissions
+        Permission(name='Create School Settings', code_name='create_school_settings', module_name='SchoolSettings', module_label='School Settings', description='User can create school settings'),
+        Permission(name='Read School Settings', code_name='read_school_settings', module_name='SchoolSettings', module_label='School Settings', description='User can view school settings'),
+        Permission(name='Update School Settings', code_name='update_school_settings', module_name='SchoolSettings', module_label='School Settings', description='User can update school settings'),
+        Permission(name='Delete School Settings', code_name='delete_school_settings', module_name='SchoolSettings', module_label='School Settings', description='User can delete school settings'),
+
+        # Email Template Permissions
+        Permission(name='Create Email Template', code_name='create_email_template', module_name='EmailTemplate', module_label='Email Templates', description='User can create new email templates'),
+        Permission(name='Read Email Template', code_name='read_email_template', module_name='EmailTemplate', module_label='Email Templates', description='User can view email templates'),
+        Permission(name='Update Email Template', code_name='update_email_template', module_name='EmailTemplate', module_label='Email Templates', description='User can update email templates'),
+        Permission(name='Delete Email Template', code_name='delete_email_template', module_name='EmailTemplate', module_label='Email Templates', description='User can delete email templates'),
+
+        # SMS Template Permissions
+        Permission(name='Create SMS Template', code_name='create_sms_template', module_name='SMSTemplate', module_label='SMS Templates', description='User can create new SMS templates'),
+        Permission(name='Read SMS Template', code_name='read_sms_template', module_name='SMSTemplate', module_label='SMS Templates', description='User can view SMS templates'),
+        Permission(name='Update SMS Template', code_name='update_sms_template', module_name='SMSTemplate', module_label='SMS Templates', description='User can update SMS templates'),
+        Permission(name='Delete SMS Template', code_name='delete_sms_template', module_name='SMSTemplate', module_label='SMS Templates', description='User can delete SMS templates'),
+
+        # Audit Log Permissions
+        Permission(name='Create Audit Log', code_name='create_audit_log', module_name='AuditLog', module_label='Audit Logs', description='User can create new audit log entries'),
+        Permission(name='Read Audit Log', code_name='read_audit_log', module_name='AuditLog', module_label='Audit Logs', description='User can view audit log entries'),
+        Permission(name='Update Audit Log', code_name='update_audit_log', module_name='AuditLog', module_label='Audit Logs', description='User can update audit log entries'),
+        Permission(name='Delete Audit Log', code_name='delete_audit_log', module_name='AuditLog', module_label='Audit Logs', description='User can delete audit log entries'),
+
+        ]
 
 
 def add_permission():

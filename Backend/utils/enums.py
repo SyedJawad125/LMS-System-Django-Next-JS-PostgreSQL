@@ -313,3 +313,7 @@ ID_PROOF ='id_proof'
 ADDRESS_PROOF = 'address_proof'
 MEDICAL = 'medical_certificate'
 OTHER = 'other'
+
+POSITIVE = 'positive'
+NEGATIVE = 'negative'
+NEUTRAL = 'neutral'

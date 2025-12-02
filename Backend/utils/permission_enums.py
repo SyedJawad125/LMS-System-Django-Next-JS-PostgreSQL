@@ -403,6 +403,42 @@ READ_LEAVE_HISTORY = 'read_leave_history'
 UPDATE_LEAVE_HISTORY = 'update_leave_history'
 DELETE_LEAVE_HISTORY = 'delete_leave_history'
 
+# Report Card Permissions
+CREATE_REPORT_CARD = 'create_report_card'
+READ_REPORT_CARD = 'read_report_card'
+UPDATE_REPORT_CARD = 'update_report_card'
+DELETE_REPORT_CARD = 'delete_report_card'
+
+# Student Behavior Permissions
+CREATE_STUDENT_BEHAVIOR = 'create_student_behavior'
+READ_STUDENT_BEHAVIOR = 'read_student_behavior'
+UPDATE_STUDENT_BEHAVIOR = 'update_student_behavior'
+DELETE_STUDENT_BEHAVIOR = 'delete_student_behavior'
+
+# School Settings Permissions
+CREATE_SCHOOL_SETTINGS = 'create_school_settings'
+READ_SCHOOL_SETTINGS = 'read_school_settings'
+UPDATE_SCHOOL_SETTINGS = 'update_school_settings'
+DELETE_SCHOOL_SETTINGS = 'delete_school_settings'
+
+# Email Template Permissions
+CREATE_EMAIL_TEMPLATE = 'create_email_template'
+READ_EMAIL_TEMPLATE = 'read_email_template'
+UPDATE_EMAIL_TEMPLATE = 'update_email_template'
+DELETE_EMAIL_TEMPLATE = 'delete_email_template'
+
+# SMS Template Permissions
+CREATE_SMS_TEMPLATE = 'create_sms_template'
+READ_SMS_TEMPLATE = 'read_sms_template'
+UPDATE_SMS_TEMPLATE = 'update_sms_template'
+DELETE_SMS_TEMPLATE = 'delete_sms_template'
+
+# Audit Log Permissions
+CREATE_AUDIT_LOG = 'create_audit_log'
+READ_AUDIT_LOG = 'read_audit_log'
+UPDATE_AUDIT_LOG = 'update_audit_log'
+DELETE_AUDIT_LOG = 'delete_audit_log'
+
 # # Leave Type Permissions
 # CREATE_LEAVE_TYPE = 'create_leave_type'
 # READ_LEAVE_TYPE = 'read_leave_type'
