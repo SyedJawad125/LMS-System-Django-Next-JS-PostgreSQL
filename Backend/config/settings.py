@@ -100,6 +100,7 @@ INSTALLED_APPS = [
     'apps.homework_assignments',
     'apps.certificate',
     'apps.leave',
+    'apps.configuration',
 
     "drf_spectacular",
     "drf_spectacular_sidecar",

@@ -19,6 +19,7 @@ urlpatterns = [
     path('api/homework/assignment/', include('apps.homework_assignments.urls')),
     path('api/certificate/', include('apps.certificate.urls')),
     path('api/leave/', include('apps.leave.urls')),
+    path('api/configuration/', include('apps.configuration.urls')),
     
     
 

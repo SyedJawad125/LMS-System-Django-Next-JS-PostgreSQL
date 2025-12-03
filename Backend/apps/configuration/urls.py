@@ -8,8 +8,8 @@ from .views import (
 
 urlpatterns = [
 
-    path('v1/school/settings/', SchoolSettingsView.as_view(), name='school-settings'),
-    path('v1/email/templates/', EmailTemplateView.as_view(), name='email-templates'),
-    path('v1/sms/templates/', SMSTemplateView.as_view(), name='sms-templates'),
-    path('v1/audit/logs/', AuditLogView.as_view(), name='audit-logs'),
+    path('v1/school/setting/', SchoolSettingsView.as_view(), name='school-settings'),
+    path('v1/email/template/', EmailTemplateView.as_view(), name='email-templates'),
+    path('v1/sms/template/', SMSTemplateView.as_view(), name='sms-templates'),
+    path('v1/audit/log/', AuditLogView.as_view(), name='audit-logs'),
 ]
