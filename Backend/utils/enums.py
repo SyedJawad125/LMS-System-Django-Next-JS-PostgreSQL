@@ -317,3 +317,9 @@ OTHER = 'other'
 POSITIVE = 'positive'
 NEGATIVE = 'negative'
 NEUTRAL = 'neutral'
+
+# Leave Status Constants - MUST be lowercase
+PENDING = 'pending'
+APPROVED = 'approved'
+REJECTED = 'rejected'
+CANCELLED = 'cancelled'

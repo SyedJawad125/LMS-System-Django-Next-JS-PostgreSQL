@@ -137,7 +137,7 @@ class LeaveApprovalWorkflowView(BaseView):
 
 class LeaveHistoryView(BaseView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = LeaveHistorySerializer
+    serializer_class = LeaveHistorySerializer  
     filterset_class = LeaveHistoryFilter
 
     @permission_required([READ_LEAVE_HISTORY])  # History is typically read-only

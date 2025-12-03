@@ -99,6 +99,7 @@ INSTALLED_APPS = [
     'apps.communication',
     'apps.homework_assignments',
     'apps.certificate',
+    'apps.leave',
 
     "drf_spectacular",
     "drf_spectacular_sidecar",

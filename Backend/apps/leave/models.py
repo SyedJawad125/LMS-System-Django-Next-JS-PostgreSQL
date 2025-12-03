@@ -30,7 +30,6 @@ class LeaveType(TimeUserStamps):
         counter = 1
         code = base_code
         
-        # Check against all records (including soft deleted) to prevent duplicates
         while LeaveType.objects.filter(code=code).exists():
             code = f"{base_code}_{counter}"
             counter += 1
@@ -45,60 +44,24 @@ class LeaveApplication(TimeUserStamps):
     """Leave Applications with separate teacher/student fields"""
     
     STATUS_CHOICES = [
-        (PENDING, PENDING), 
-        (APPROVED, APPROVED), 
-        (REJECTED, REJECTED), 
+        (PENDING, PENDING),
+        (APPROVED, APPROVED),
+        (REJECTED, REJECTED),
         (CANCELLED, CANCELLED)
     ]
     
-    application_number = models.CharField(
-        max_length=50, 
-        unique=True, 
-        editable=False, 
-        db_index=True
-    )
-    teacher = models.ForeignKey(
-        'users.Teacher', 
-        on_delete=models.CASCADE, 
-        null=True, 
-        blank=True, 
-        related_name='teacher_leave_applications'
-    )
-    student = models.ForeignKey(
-        'users.Student', 
-        on_delete=models.CASCADE, 
-        null=True, 
-        blank=True, 
-        related_name='student_leave_applications'
-    )
-    leave_type = models.ForeignKey(
-        LeaveType, 
-        on_delete=models.PROTECT, 
-        related_name='applications'
-    )
+    application_number = models.CharField(max_length=50, unique=True, editable=False, db_index=True)
+    teacher = models.ForeignKey('users.Teacher', on_delete=models.CASCADE, null=True, blank=True, related_name='teacher_leave_applications')
+    student = models.ForeignKey('users.Student', on_delete=models.CASCADE, null=True, blank=True, related_name='student_leave_applications')
+    leave_type = models.ForeignKey(LeaveType, on_delete=models.PROTECT, related_name='applications')
     start_date = models.DateField()
     end_date = models.DateField()
     total_days = models.IntegerField(editable=False)
     reason = models.TextField()
-    attachment = models.FileField(
-        upload_to='leave_applications/%Y/%m/%d/', 
-        null=True, 
-        blank=True, 
-        max_length=500
-    )
-    status = models.CharField(
-        max_length=20, 
-        choices=STATUS_CHOICES, 
-        default=PENDING
-    )
+    attachment = models.FileField(upload_to='leave_applications/%Y/%m/%d/', null=True, blank=True, max_length=500)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
     applied_at = models.DateTimeField(auto_now_add=True)
-    reviewed_by = models.ForeignKey(
-        'users.Teacher', 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True, 
-        related_name='reviewed_leave_applications'
-    )
+    reviewed_by = models.ForeignKey('users.Teacher', on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_leave_applications')
     reviewed_at = models.DateTimeField(null=True, blank=True)
     remarks = models.TextField(blank=True)
     emergency_contact = models.CharField(max_length=100, blank=True)
@@ -125,16 +88,13 @@ class LeaveApplication(TimeUserStamps):
             raise ValidationError("Cannot apply for leave in the past")
     
     def save(self, *args, **kwargs):
-        # Auto-generate application number
         if not self.application_number:
             self.application_number = self._generate_application_number()
         
-        # Auto-calculate total days
         if self.start_date and self.end_date:
             delta = self.end_date - self.start_date
             self.total_days = delta.days + 1
         
-        # Auto-set reviewed_at when status changes from PENDING
         if self.pk:
             try:
                 old_instance = LeaveApplication.objects.get(pk=self.pk)
@@ -152,7 +112,6 @@ class LeaveApplication(TimeUserStamps):
         year = timezone.now().strftime('%Y')
         month = timezone.now().strftime('%m')
         
-        # Get count for this month (all records including deleted)
         count = LeaveApplication.objects.filter(
             application_number__startswith=f"{prefix}-{year}{month}"
         ).count() + 1
@@ -206,25 +165,9 @@ class LeaveApplication(TimeUserStamps):
 
 class LeaveBalance(TimeUserStamps):
     """Track leave balances for teachers/students per year"""
-    teacher = models.ForeignKey(
-        'users.Teacher', 
-        on_delete=models.CASCADE, 
-        null=True, 
-        blank=True, 
-        related_name='leave_balances'
-    )
-    student = models.ForeignKey(
-        'users.Student', 
-        on_delete=models.CASCADE, 
-        null=True, 
-        blank=True, 
-        related_name='leave_balances'
-    )
-    leave_type = models.ForeignKey(
-        LeaveType, 
-        on_delete=models.CASCADE, 
-        related_name='balances'
-    )
+    teacher = models.ForeignKey('users.Teacher', on_delete=models.CASCADE, null=True, blank=True, related_name='leave_balances')
+    student = models.ForeignKey('users.Student', on_delete=models.CASCADE, null=True, blank=True, related_name='leave_balances')
+    leave_type = models.ForeignKey(LeaveType, on_delete=models.CASCADE, related_name='balances')
     academic_year = models.IntegerField()
     total_allocated = models.IntegerField(default=0)
     used = models.IntegerField(default=0)
@@ -234,7 +177,7 @@ class LeaveBalance(TimeUserStamps):
     class Meta:
         db_table = 'leave_balances'
         unique_together = [
-            ['teacher', 'leave_type', 'academic_year'], 
+            ['teacher', 'leave_type', 'academic_year'],
             ['student', 'leave_type', 'academic_year']
         ]
         verbose_name_plural = "Leave Balances"
@@ -247,7 +190,6 @@ class LeaveBalance(TimeUserStamps):
             raise ValidationError("Cannot select both teacher and student")
     
     def save(self, *args, **kwargs):
-        # Auto-calculate remaining
         self.remaining = (self.total_allocated + self.carried_over) - self.used
         
         if self.remaining < 0:
@@ -294,46 +236,24 @@ class LeaveBalance(TimeUserStamps):
 class LeaveConfiguration(TimeUserStamps):
     """System-wide leave configuration and rules"""
     academic_year = models.IntegerField(unique=True)
-    max_consecutive_days = models.IntegerField(
-        default=30, 
-        help_text="Maximum consecutive leave days allowed"
-    )
-    advance_notice_days = models.IntegerField(
-        default=7, 
-        help_text="Minimum advance notice required for leave application"
-    )
-    max_advance_days = models.IntegerField(
-        default=90, 
-        help_text="Maximum days in advance leave can be applied"
-    )
+    max_consecutive_days = models.IntegerField(default=30, help_text="Maximum consecutive leave days allowed")
+    advance_notice_days = models.IntegerField(default=7, help_text="Minimum advance notice required for leave application")
+    max_advance_days = models.IntegerField(default=90, help_text="Maximum days in advance leave can be applied")
     require_multilevel_approval = models.BooleanField(default=False)
-    auto_approve_short_leaves = models.BooleanField(
-        default=False, 
-        help_text="Auto-approve leaves shorter than specified days"
-    )
-    auto_approve_max_days = models.IntegerField(
-        default=2, 
-        help_text="Maximum days for auto-approval"
-    )
+    auto_approve_short_leaves = models.BooleanField(default=False, help_text="Auto-approve leaves shorter than specified days")
+    auto_approve_max_days = models.IntegerField(default=2, help_text="Maximum days for auto-approval")
     allow_carry_over = models.BooleanField(default=True)
     max_carry_over_days = models.IntegerField(default=10)
-    carry_over_validity_months = models.IntegerField(
-        default=3, 
-        help_text="Months into next academic year when carried over leaves expire"
-    )
+    carry_over_validity_months = models.IntegerField(default=3, help_text="Months into next academic year when carried over leaves expire")
     notify_applicant_on_status_change = models.BooleanField(default=True)
     notify_reviewer_on_new_application = models.BooleanField(default=True)
-    is_active = models.BooleanField(
-        default=True, 
-        help_text="Only one configuration can be active at a time"
-    )
+    is_active = models.BooleanField(default=True, help_text="Only one configuration can be active at a time")
     
     class Meta:
         db_table = 'leave_configurations'
         verbose_name_plural = "Leave Configurations"
     
     def save(self, *args, **kwargs):
-        # Ensure only one active configuration (excluding soft deleted)
         if self.is_active:
             LeaveConfiguration.objects.filter(deleted=False).exclude(pk=self.pk).update(is_active=False)
         super().save(*args, **kwargs)
@@ -359,31 +279,13 @@ class LeaveApprovalWorkflow(TimeUserStamps):
         (4, 'Level 4 - Principal/Director')
     ]
     
-    leave_application = models.ForeignKey(
-        LeaveApplication, 
-        on_delete=models.CASCADE, 
-        related_name='approval_workflow'
-    )
+    leave_application = models.ForeignKey(LeaveApplication, on_delete=models.CASCADE, related_name='approval_workflow')
     approval_level = models.IntegerField(choices=LEVEL_CHOICES)
-    approver = models.ForeignKey(
-        'users.Teacher', 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True,
-        related_name='leave_approvals'
-    )
-    status = models.CharField(
-        max_length=20, 
-        choices=LeaveApplication.STATUS_CHOICES, 
-        default=PENDING
-    )
+    approver = models.ForeignKey('users.Teacher', on_delete=models.SET_NULL, null=True, blank=True, related_name='leave_approvals')
+    status = models.CharField(max_length=20, choices=LeaveApplication.STATUS_CHOICES, default=PENDING)
     comments = models.TextField(blank=True)
     approved_at = models.DateTimeField(null=True, blank=True)
-    deadline = models.DateTimeField(
-        null=True, 
-        blank=True, 
-        help_text="Deadline for approval at this level"
-    )
+    deadline = models.DateTimeField(null=True, blank=True, help_text="Deadline for approval at this level")
     is_current_level = models.BooleanField(default=True)
     
     class Meta:
@@ -397,16 +299,13 @@ class LeaveApprovalWorkflow(TimeUserStamps):
             raise ValidationError("Approval level must be between 1 and 4")
     
     def save(self, *args, **kwargs):
-        # Auto-set deadline if not provided (3 days from now)
         if not self.deadline and not self.pk:
             from datetime import timedelta
             self.deadline = timezone.now() + timedelta(days=3)
         
-        # Auto-set approved_at when status changes to APPROVED/REJECTED
         if self.status in [APPROVED, REJECTED] and not self.approved_at:
             self.approved_at = timezone.now()
         
-        # Mark other levels as not current when this level is approved/rejected
         if self.status in [APPROVED, REJECTED] and self.pk:
             LeaveApprovalWorkflow.objects.filter(
                 leave_application=self.leave_application,
@@ -454,35 +353,12 @@ class LeaveHistory(TimeUserStamps):
         ('withdrawn', 'Withdrawn')
     ]
     
-    leave_application = models.ForeignKey(
-        LeaveApplication, 
-        on_delete=models.CASCADE, 
-        related_name='history'
-    )
+    leave_application = models.ForeignKey(LeaveApplication, on_delete=models.CASCADE, related_name='history')
     action = models.CharField(max_length=50, choices=ACTION_CHOICES)
-    changed_by = models.ForeignKey(
-        'users.User', 
-        on_delete=models.SET_NULL, 
-        null=True,
-        blank=True
-    )
-    previous_status = models.CharField(
-        max_length=20, 
-        choices=LeaveApplication.STATUS_CHOICES, 
-        null=True, 
-        blank=True
-    )
-    new_status = models.CharField(
-        max_length=20, 
-        choices=LeaveApplication.STATUS_CHOICES, 
-        null=True, 
-        blank=True
-    )
-    changes = models.JSONField(
-        default=dict, 
-        blank=True,
-        help_text="JSON representation of changed fields"
-    )
+    changed_by = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True, blank=True)
+    previous_status = models.CharField(max_length=20, choices=LeaveApplication.STATUS_CHOICES, null=True, blank=True)
+    new_status = models.CharField(max_length=20, choices=LeaveApplication.STATUS_CHOICES, null=True, blank=True)
+    changes = models.JSONField(default=dict, blank=True, help_text="JSON representation of changed fields")
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     user_agent = models.TextField(blank=True)
     remarks = models.TextField(blank=True)

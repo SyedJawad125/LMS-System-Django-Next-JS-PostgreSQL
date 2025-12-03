@@ -1,6 +1,8 @@
 from datetime import date
 from rest_framework import serializers
 from django.core.exceptions import ValidationError as DjangoValidationError
+
+from utils.enums import *
 from .models import (
     LeaveType, LeaveApplication, LeaveBalance, 
     LeaveConfiguration, LeaveApprovalWorkflow, LeaveHistory
@@ -314,8 +316,8 @@ class LeaveHistorySerializer(serializers.ModelSerializer):
 
 class LeaveApplicationListSerializer(serializers.ModelSerializer):
     """Minimal serializer for leave application listings"""
-    applicant_name = serializers.CharField(source='applicant_name', read_only=True)
-    applicant_type = serializers.CharField(source='applicant_type', read_only=True)
+    applicant_name = serializers.CharField(read_only=True)  # Remove source
+    applicant_type = serializers.CharField(read_only=True)  # Remove source
     leave_type_name = serializers.CharField(source='leave_type.name', read_only=True)
     
     class Meta:
@@ -331,11 +333,11 @@ class LeaveApplicationSerializer(serializers.ModelSerializer):
     created_by = serializers.SerializerMethodField()
     updated_by = serializers.SerializerMethodField()
     leave_type_detail = serializers.SerializerMethodField()
-    applicant_name = serializers.CharField(source='applicant_name', read_only=True)
-    applicant_type = serializers.CharField(source='applicant_type', read_only=True)
-    is_pending = serializers.BooleanField(source='is_pending', read_only=True)
-    is_approved = serializers.BooleanField(source='is_approved', read_only=True)
-    can_be_cancelled = serializers.BooleanField(source='can_be_cancelled', read_only=True)
+    applicant_name = serializers.CharField(read_only=True)  # Remove source
+    applicant_type = serializers.CharField(read_only=True)  # Remove source
+    is_pending = serializers.BooleanField(read_only=True)  # Remove source
+    is_approved = serializers.BooleanField(read_only=True)  # Remove source
+    can_be_cancelled = serializers.BooleanField(read_only=True)  # Remove source
     reviewed_by_name = serializers.SerializerMethodField()
     
     class Meta:
@@ -449,7 +451,6 @@ class LeaveApplicationSerializer(serializers.ModelSerializer):
             data['reviewed_at'] = data['reviewed_at'].replace('T', ' ').split('.')[0]
         
         return data
-
 
 # ==================== Leave Balance Serializers ====================
 
@@ -715,3 +716,307 @@ class LeaveConfigurationSerializer(serializers.ModelSerializer):
             data['updated_at'] = data['updated_at'].replace('T', ' ').split('.')[0]
         
         return data
+    
+
+
+from rest_framework import serializers
+from .models import LeaveApprovalWorkflow, LeaveHistory, LeaveApplication
+
+
+# ==================== Leave Approval Workflow Serializers ====================
+
+class LeaveApprovalWorkflowListSerializer(serializers.ModelSerializer):
+    """Minimal serializer for leave approval workflow listings"""
+    application_number = serializers.CharField(source='leave_application.application_number', read_only=True)
+    approver_name = serializers.CharField(read_only=True)
+    level_name = serializers.CharField(read_only=True)
+    
+    class Meta:
+        model = LeaveApprovalWorkflow
+        fields = [
+            'id', 'application_number', 'approval_level', 'level_name',
+            'approver_name', 'status', 'is_current_level', 'is_overdue'
+        ]
+
+
+class LeaveApprovalWorkflowSerializer(serializers.ModelSerializer):
+    """Full leave approval workflow serializer with validations"""
+    created_by = serializers.SerializerMethodField()
+    updated_by = serializers.SerializerMethodField()
+    leave_application_detail = serializers.SerializerMethodField()
+    approver_detail = serializers.SerializerMethodField()
+    approver_name = serializers.CharField(read_only=True)
+    level_name = serializers.CharField(read_only=True)
+    is_overdue = serializers.BooleanField(read_only=True)
+    
+    class Meta:
+        model = LeaveApprovalWorkflow
+        fields = [
+            'id', 'leave_application', 'approval_level', 'approver', 'status',
+            'comments', 'approved_at', 'deadline', 'is_current_level',
+            'leave_application_detail', 'approver_detail', 'approver_name',
+            'level_name', 'is_overdue',
+            'created_by', 'updated_by', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ('approved_at', 'created_at', 'updated_at', 'created_by', 'updated_by')
+    
+    def get_created_by(self, obj):
+        if obj.created_by:
+            full_name = obj.created_by.get_full_name()
+            return full_name.strip() if full_name and full_name.strip() else obj.created_by.username
+        return None
+    
+    def get_updated_by(self, obj):
+        if obj.updated_by:
+            full_name = obj.updated_by.get_full_name()
+            return full_name.strip() if full_name and full_name.strip() else obj.updated_by.username
+        return None
+    
+    def get_leave_application_detail(self, obj):
+        if obj.leave_application and not obj.leave_application.deleted:
+            return {
+                'id': obj.leave_application.id,
+                'application_number': obj.leave_application.application_number,
+                'applicant_name': obj.leave_application.applicant_name,
+                'leave_type': obj.leave_application.leave_type.name if obj.leave_application.leave_type else None,
+                'start_date': obj.leave_application.start_date,
+                'end_date': obj.leave_application.end_date,
+                'total_days': obj.leave_application.total_days,
+                'status': obj.leave_application.status
+            }
+        return None
+    
+    def get_approver_detail(self, obj):
+        if obj.approver and not obj.approver.deleted:
+            return {
+                'id': obj.approver.id,
+                'name': obj.approver_name,
+                'email': obj.approver.user.email if hasattr(obj.approver, 'user') and obj.approver.user else None
+            }
+        return None
+    
+    def validate_leave_application(self, value):
+        if value.deleted:
+            raise serializers.ValidationError("Cannot use a deleted leave application")
+        return value
+    
+    def validate_approver(self, value):
+        if value and value.deleted:
+            raise serializers.ValidationError("Cannot use a deleted teacher")
+        return value
+    
+    def validate_approval_level(self, value):
+        if value not in [1, 2, 3, 4]:
+            raise serializers.ValidationError("Approval level must be between 1 and 4")
+        return value
+    
+    def validate_status(self, value):
+        valid_statuses = [PENDING, APPROVED, REJECTED, CANCELLED]
+        if value not in valid_statuses:
+            raise serializers.ValidationError(f"Status must be one of: {', '.join(valid_statuses)}")
+        return value
+    
+    def validate(self, data):
+        """Cross-field validation"""
+        leave_application = data.get('leave_application', getattr(self.instance, 'leave_application', None))
+        approval_level = data.get('approval_level', getattr(self.instance, 'approval_level', None))
+        
+        # Check unique together constraint
+        if leave_application and approval_level:
+            qs = LeaveApprovalWorkflow.objects.filter(
+                leave_application=leave_application,
+                approval_level=approval_level,
+                deleted=False
+            )
+            if self.instance:
+                qs = qs.exclude(id=self.instance.id)
+            
+            if qs.exists():
+                raise serializers.ValidationError(
+                    f"Approval workflow for level {approval_level} already exists for this leave application"
+                )
+        
+        return data
+    
+    def to_representation(self, instance):
+        if instance.deleted:
+            return {
+                'id': instance.id,
+                'leave_application': instance.leave_application_id,
+                'approval_level': instance.approval_level,
+                'message': f'Approval workflow for level {instance.approval_level} has been deleted successfully'
+            }
+        
+        data = super().to_representation(instance)
+        
+        # Format datetime fields
+        if isinstance(data.get('created_at'), str):
+            data['created_at'] = data['created_at'].replace('T', ' ').split('.')[0]
+        if isinstance(data.get('updated_at'), str):
+            data['updated_at'] = data['updated_at'].replace('T', ' ').split('.')[0]
+        if isinstance(data.get('approved_at'), str) and data.get('approved_at'):
+            data['approved_at'] = data['approved_at'].replace('T', ' ').split('.')[0]
+        if isinstance(data.get('deadline'), str) and data.get('deadline'):
+            data['deadline'] = data['deadline'].replace('T', ' ').split('.')[0]
+        
+        return data
+
+
+# ==================== Leave History Serializers ====================
+
+class LeaveHistoryListSerializer(serializers.ModelSerializer):
+    """Minimal serializer for leave history listings"""
+    application_number = serializers.CharField(source='leave_application.application_number', read_only=True)
+    changed_by_name = serializers.CharField(read_only=True)
+    action_display = serializers.CharField(read_only=True)
+    
+    class Meta:
+        model = LeaveHistory
+        fields = [
+            'id', 'application_number', 'action', 'action_display',
+            'changed_by_name', 'new_status', 'created_at'
+        ]
+
+
+class LeaveHistorySerializer(serializers.ModelSerializer):
+    """Full leave history serializer with validations"""
+    created_by = serializers.SerializerMethodField()
+    updated_by = serializers.SerializerMethodField()
+    leave_application_detail = serializers.SerializerMethodField()
+    changed_by_detail = serializers.SerializerMethodField()
+    changed_by_name = serializers.CharField(read_only=True)
+    action_display = serializers.CharField(read_only=True)
+    
+    class Meta:
+        model = LeaveHistory
+        fields = [
+            'id', 'leave_application', 'action', 'changed_by', 'previous_status',
+            'new_status', 'changes', 'ip_address', 'user_agent', 'remarks',
+            'leave_application_detail', 'changed_by_detail', 'changed_by_name',
+            'action_display',
+            'created_by', 'updated_by', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ('created_at', 'updated_at', 'created_by', 'updated_by')
+    
+    def get_created_by(self, obj):
+        if obj.created_by:
+            full_name = obj.created_by.get_full_name()
+            return full_name.strip() if full_name and full_name.strip() else obj.created_by.username
+        return None
+    
+    def get_updated_by(self, obj):
+        if obj.updated_by:
+            full_name = obj.updated_by.get_full_name()
+            return full_name.strip() if full_name and full_name.strip() else obj.updated_by.username
+        return None
+    
+    def get_leave_application_detail(self, obj):
+        if obj.leave_application and not obj.leave_application.deleted:
+            return {
+                'id': obj.leave_application.id,
+                'application_number': obj.leave_application.application_number,
+                'applicant_name': obj.leave_application.applicant_name,
+                'status': obj.leave_application.status
+            }
+        return None
+    
+    def get_changed_by_detail(self, obj):
+        if obj.changed_by and not obj.changed_by.deleted:
+            return {
+                'id': obj.changed_by.id,
+                'username': obj.changed_by.username,
+                'full_name': obj.changed_by_name,
+                'email': obj.changed_by.email if hasattr(obj.changed_by, 'email') else None
+            }
+        return None
+    
+    def validate_leave_application(self, value):
+        if value.deleted:
+            raise serializers.ValidationError("Cannot use a deleted leave application")
+        return value
+    
+    def validate_changed_by(self, value):
+        if value and value.deleted:
+            raise serializers.ValidationError("Cannot use a deleted user")
+        return value
+    
+    def validate_action(self, value):
+        valid_actions = ['created', 'submitted', 'approved', 'rejected', 'cancelled', 
+                        'modified', 'forwarded', 'withdrawn']
+        if value not in valid_actions:
+            raise serializers.ValidationError(f"Action must be one of: {', '.join(valid_actions)}")
+        return value
+    
+    def validate_changes(self, value):
+        """Ensure changes is a valid dict/JSON"""
+        if not isinstance(value, dict):
+            raise serializers.ValidationError("Changes must be a valid JSON object")
+        return value
+    
+    def validate_ip_address(self, value):
+        """Validate IP address format"""
+        if value:
+            import ipaddress
+            try:
+                ipaddress.ip_address(value)
+            except ValueError:
+                raise serializers.ValidationError("Invalid IP address format")
+        return value
+    
+    def to_representation(self, instance):
+        if instance.deleted:
+            return {
+                'id': instance.id,
+                'leave_application': instance.leave_application_id,
+                'action': instance.action,
+                'message': 'Leave history record has been deleted successfully'
+            }
+        
+        data = super().to_representation(instance)
+        
+        # Format datetime fields
+        if isinstance(data.get('created_at'), str):
+            data['created_at'] = data['created_at'].replace('T', ' ').split('.')[0]
+        if isinstance(data.get('updated_at'), str):
+            data['updated_at'] = data['updated_at'].replace('T', ' ').split('.')[0]
+        
+        return data
+
+
+# ==================== Approval Action Serializers ====================
+
+class ApprovalActionSerializer(serializers.Serializer):
+    """Serializer for approval/rejection actions"""
+    status = serializers.ChoiceField(choices=['approved', 'rejected'], required=True)
+    comments = serializers.CharField(required=False, allow_blank=True)
+    
+    def validate_status(self, value):
+        if value not in ['approved', 'rejected']:
+            raise serializers.ValidationError("Status must be either 'approved' or 'rejected'")
+        return value
+
+
+class BulkApprovalActionSerializer(serializers.Serializer):
+    """Serializer for bulk approval/rejection actions"""
+    workflow_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        required=True,
+        min_length=1
+    )
+    status = serializers.ChoiceField(choices=['approved', 'rejected'], required=True)
+    comments = serializers.CharField(required=False, allow_blank=True)
+    
+    def validate_workflow_ids(self, value):
+        if not value:
+            raise serializers.ValidationError("At least one workflow ID is required")
+        
+        # Check if all workflow IDs exist
+        existing_count = LeaveApprovalWorkflow.objects.filter(
+            id__in=value,
+            deleted=False
+        ).count()
+        
+        if existing_count != len(value):
+            raise serializers.ValidationError("Some workflow IDs are invalid or deleted")
+        
+        return value
