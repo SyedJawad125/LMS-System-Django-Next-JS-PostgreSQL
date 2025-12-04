@@ -9,7 +9,7 @@ import uuid
 class LeaveType(TimeUserStamps):
     """Types of Leave with auto-generated code"""
     name = models.CharField(max_length=100)
-    code = models.CharField(max_length=20, unique=True, editable=False)
+    code = models.CharField(max_length=20, editable=False)
     max_days_per_year = models.IntegerField(default=30)
     requires_approval = models.BooleanField(default=True)
     description = models.TextField(blank=True)

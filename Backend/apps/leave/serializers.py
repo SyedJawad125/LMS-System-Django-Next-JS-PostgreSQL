@@ -58,11 +58,11 @@ class LeaveTypeSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Leave type name must be at least 2 characters long")
         
         qs = LeaveType.objects.filter(name__iexact=value.strip(), deleted=False)
-        if self.instance:
-            qs = qs.exclude(id=self.instance.id)
+        # if self.instance:
+        #     qs = qs.exclude(id=self.instance.id)
         
-        if qs.exists():
-            raise serializers.ValidationError(f"Leave type with name '{value}' already exists")
+        # if qs.exists():
+        #     raise serializers.ValidationError(f"Leave type with name '{value}' already exists")
         
         return value.strip()
     
