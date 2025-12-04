@@ -101,6 +101,7 @@ INSTALLED_APPS = [
     'apps.certificate',
     'apps.leave',
     'apps.configuration',
+    'apps.report',
 
     "drf_spectacular",
     "drf_spectacular_sidecar",

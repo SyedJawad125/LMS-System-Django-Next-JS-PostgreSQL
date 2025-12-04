@@ -20,6 +20,7 @@ urlpatterns = [
     path('api/certificate/', include('apps.certificate.urls')),
     path('api/leave/', include('apps.leave.urls')),
     path('api/configuration/', include('apps.configuration.urls')),
+    path('api/report/', include('apps.report.urls')),
     
     
 
