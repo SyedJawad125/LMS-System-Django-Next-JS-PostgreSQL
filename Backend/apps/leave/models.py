@@ -40,20 +40,143 @@ class LeaveType(TimeUserStamps):
         return f"{self.name} ({self.code})"
 
 
+# class LeaveApplication(TimeUserStamps):
+#     """Leave Applications with separate teacher/student fields"""
+    
+#     STATUS_CHOICES = [
+#         (PENDING, PENDING),
+#         (APPROVED, APPROVED),
+#         (REJECTED, REJECTED),
+#         (CANCELLED, CANCELLED)
+#     ]
+    
+#     application_number = models.CharField(max_length=50, unique=True, editable=False, db_index=True)
+#     teacher = models.ForeignKey('users.Teacher', on_delete=models.CASCADE, null=True, blank=True, related_name='teacher_leave_applications')
+#     student = models.ForeignKey('users.Student', on_delete=models.CASCADE, null=True, blank=True, related_name='student_leave_applications')
+#     leave_type = models.ForeignKey(LeaveType, on_delete=models.PROTECT, related_name='applications')
+#     start_date = models.DateField()
+#     end_date = models.DateField()
+#     total_days = models.IntegerField(editable=False)
+#     reason = models.TextField()
+#     attachment = models.FileField(upload_to='leave_applications/%Y/%m/%d/', null=True, blank=True, max_length=500)
+#     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
+#     applied_at = models.DateTimeField(auto_now_add=True)
+#     reviewed_by = models.ForeignKey('users.Teacher', on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_leave_applications')
+#     reviewed_at = models.DateTimeField(null=True, blank=True)
+#     remarks = models.TextField(blank=True)
+#     emergency_contact = models.CharField(max_length=100, blank=True)
+#     emergency_phone = models.CharField(max_length=20, blank=True)
+#     address_during_leave = models.TextField(blank=True)
+    
+#     class Meta:
+#         db_table = 'leave_applications'
+#         ordering = ['-applied_at']
+#         indexes = [
+#             models.Index(fields=['status']),
+#             models.Index(fields=['start_date', 'end_date']),
+#         ]
+    
+#     def clean(self):
+#         """Validation before saving"""
+#         if not self.teacher and not self.student:
+#             raise ValidationError("Either teacher or student must be selected")
+#         if self.teacher and self.student:
+#             raise ValidationError("Cannot select both teacher and student")
+#         if self.start_date and self.end_date and self.start_date > self.end_date:
+#             raise ValidationError("Start date cannot be after end date")
+#         if self.start_date and self.start_date < timezone.now().date():
+#             raise ValidationError("Cannot apply for leave in the past")
+    
+#     def save(self, *args, **kwargs):
+#         if not self.application_number:
+#             self.application_number = self._generate_application_number()
+        
+#         if self.start_date and self.end_date:
+#             delta = self.end_date - self.start_date
+#             self.total_days = delta.days + 1
+        
+#         if self.pk:
+#             try:
+#                 old_instance = LeaveApplication.objects.get(pk=self.pk)
+#                 if old_instance.status == PENDING and self.status != PENDING:
+#                     if not self.reviewed_at:
+#                         self.reviewed_at = timezone.now()
+#             except LeaveApplication.DoesNotExist:
+#                 pass
+        
+#         super().save(*args, **kwargs)
+    
+#     def _generate_application_number(self):
+#         """Generate unique application number (check all records including deleted)"""
+#         prefix = "LV"
+#         year = timezone.now().strftime('%Y')
+#         month = timezone.now().strftime('%m')
+        
+#         count = LeaveApplication.objects.filter(
+#             application_number__startswith=f"{prefix}-{year}{month}"
+#         ).count() + 1
+        
+#         return f"{prefix}-{year}{month}-{count:04d}"
+    
+#     @property
+#     def applicant(self):
+#         """Return the applicant (teacher or student)"""
+#         return self.teacher or self.student
+    
+#     @property
+#     def applicant_type(self):
+#         """Return applicant type"""
+#         if self.teacher:
+#             return 'teacher'
+#         elif self.student:
+#             return 'student'
+#         return None
+    
+#     @property
+#     def applicant_name(self):
+#         """Return applicant name"""
+#         if self.teacher:
+#             if hasattr(self.teacher, 'user') and self.teacher.user:
+#                 full_name = self.teacher.user.get_full_name()
+#                 return full_name.strip() if full_name and full_name.strip() else self.teacher.user.username
+#             return str(self.teacher)
+#         elif self.student:
+#             if hasattr(self.student, 'user') and self.student.user:
+#                 full_name = self.student.user.get_full_name()
+#                 return full_name.strip() if full_name and full_name.strip() else self.student.user.username
+#             return str(self.student)
+#         return "Unknown"
+    
+#     @property
+#     def is_pending(self):
+#         return self.status == PENDING
+    
+#     @property
+#     def is_approved(self):
+#         return self.status == APPROVED
+    
+#     @property
+#     def can_be_cancelled(self):
+#         return self.status in [PENDING, APPROVED]
+    
+#     def __str__(self):
+#         return f"{self.application_number} - {self.applicant_name} - {self.leave_type.name}"
+
+
+
+
+from django.db import models
+from django.core.exceptions import ValidationError
+from django.utils import timezone
+from utils.enums import *
+from utils.reusable_classes import TimeUserStamps
+
 class LeaveApplication(TimeUserStamps):
-    """Leave Applications with separate teacher/student fields"""
-    
-    STATUS_CHOICES = [
-        (PENDING, PENDING),
-        (APPROVED, APPROVED),
-        (REJECTED, REJECTED),
-        (CANCELLED, CANCELLED)
-    ]
-    
+    STATUS_CHOICES = [(PENDING, PENDING), (APPROVED, APPROVED), (REJECTED, REJECTED), (CANCELLED, CANCELLED)]
     application_number = models.CharField(max_length=50, unique=True, editable=False, db_index=True)
     teacher = models.ForeignKey('users.Teacher', on_delete=models.CASCADE, null=True, blank=True, related_name='teacher_leave_applications')
     student = models.ForeignKey('users.Student', on_delete=models.CASCADE, null=True, blank=True, related_name='student_leave_applications')
-    leave_type = models.ForeignKey(LeaveType, on_delete=models.PROTECT, related_name='applications')
+    leave_type = models.ForeignKey('LeaveType', on_delete=models.PROTECT, related_name='applications')
     start_date = models.DateField()
     end_date = models.DateField()
     total_days = models.IntegerField(editable=False)
@@ -71,30 +194,27 @@ class LeaveApplication(TimeUserStamps):
     class Meta:
         db_table = 'leave_applications'
         ordering = ['-applied_at']
-        indexes = [
-            models.Index(fields=['status']),
-            models.Index(fields=['start_date', 'end_date']),
-        ]
+        indexes = [models.Index(fields=['status']), models.Index(fields=['start_date', 'end_date']), models.Index(fields=['teacher']), models.Index(fields=['student'])]
     
     def clean(self):
-        """Validation before saving"""
+        errors = {}
         if not self.teacher and not self.student:
-            raise ValidationError("Either teacher or student must be selected")
+            errors['teacher'] = "Either teacher or student must be selected"
+            errors['student'] = "Either teacher or student must be selected"
         if self.teacher and self.student:
-            raise ValidationError("Cannot select both teacher and student")
-        if self.start_date and self.end_date and self.start_date > self.end_date:
-            raise ValidationError("Start date cannot be after end date")
-        if self.start_date and self.start_date < timezone.now().date():
-            raise ValidationError("Cannot apply for leave in the past")
+            errors['teacher'] = "Cannot select both teacher and student"
+            errors['student'] = "Cannot select both teacher and student"
+        if self.start_date and self.end_date:
+            if self.start_date > self.end_date:
+                errors['end_date'] = "Start date cannot be after end date"
+        if errors:
+            raise ValidationError(errors)
     
     def save(self, *args, **kwargs):
         if not self.application_number:
             self.application_number = self._generate_application_number()
-        
         if self.start_date and self.end_date:
-            delta = self.end_date - self.start_date
-            self.total_days = delta.days + 1
-        
+            self.total_days = (self.end_date - self.start_date).days + 1
         if self.pk:
             try:
                 old_instance = LeaveApplication.objects.get(pk=self.pk)
@@ -103,29 +223,21 @@ class LeaveApplication(TimeUserStamps):
                         self.reviewed_at = timezone.now()
             except LeaveApplication.DoesNotExist:
                 pass
-        
         super().save(*args, **kwargs)
     
     def _generate_application_number(self):
-        """Generate unique application number (check all records including deleted)"""
         prefix = "LV"
         year = timezone.now().strftime('%Y')
         month = timezone.now().strftime('%m')
-        
-        count = LeaveApplication.objects.filter(
-            application_number__startswith=f"{prefix}-{year}{month}"
-        ).count() + 1
-        
+        count = LeaveApplication.objects.filter(application_number__startswith=f"{prefix}-{year}{month}").count() + 1
         return f"{prefix}-{year}{month}-{count:04d}"
     
     @property
     def applicant(self):
-        """Return the applicant (teacher or student)"""
         return self.teacher or self.student
     
     @property
     def applicant_type(self):
-        """Return applicant type"""
         if self.teacher:
             return 'teacher'
         elif self.student:
@@ -134,18 +246,13 @@ class LeaveApplication(TimeUserStamps):
     
     @property
     def applicant_name(self):
-        """Return applicant name"""
-        if self.teacher:
-            if hasattr(self.teacher, 'user') and self.teacher.user:
-                full_name = self.teacher.user.get_full_name()
-                return full_name.strip() if full_name and full_name.strip() else self.teacher.user.username
-            return str(self.teacher)
-        elif self.student:
-            if hasattr(self.student, 'user') and self.student.user:
-                full_name = self.student.user.get_full_name()
-                return full_name.strip() if full_name and full_name.strip() else self.student.user.username
-            return str(self.student)
-        return "Unknown"
+        applicant = self.applicant
+        if not applicant:
+            return "Unknown"
+        if hasattr(applicant, 'user') and applicant.user:
+            full_name = applicant.user.get_full_name()
+            return full_name.strip() if full_name and full_name.strip() else applicant.user.username
+        return str(applicant)
     
     @property
     def is_pending(self):
@@ -156,8 +263,20 @@ class LeaveApplication(TimeUserStamps):
         return self.status == APPROVED
     
     @property
+    def is_rejected(self):
+        return self.status == REJECTED
+    
+    @property
+    def is_cancelled(self):
+        return self.status == CANCELLED
+    
+    @property
     def can_be_cancelled(self):
         return self.status in [PENDING, APPROVED]
+    
+    @property
+    def can_be_edited(self):
+        return self.status == PENDING
     
     def __str__(self):
         return f"{self.application_number} - {self.applicant_name} - {self.leave_type.name}"
