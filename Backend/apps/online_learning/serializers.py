@@ -1,4 +1,5 @@
 from datetime import datetime
+from django.utils import timezone  # Change this line
 from rest_framework import serializers
 from django.core.validators import MinValueValidator, MaxValueValidator
 from .models import (
@@ -6,7 +7,9 @@ from .models import (
 )
 from apps.academic.serializers import SubjectListingSerializer
 from apps.users.serializers import StudentListSerializer, TeacherListSerializer
-
+# Remove these duplicate/circular imports:
+# from .models import QuizAttempt, Quiz, Student  (already imported above)
+# from apps.online_learning.serializers import QuizListingSerializer  (circular import)
 
 # ==================== Course Serializers ====================
 
@@ -276,7 +279,7 @@ class CourseEnrollmentSerializer(serializers.ModelSerializer):
             'created_by', 'updated_by', 'created_at', 'updated_at'
         ]
         read_only_fields = (
-            'enrolled_at', 'progress_percentage', 'created_at', 
+            'enrolled_at', 'created_at', 
             'updated_at', 'created_by', 'updated_by'
         )
     
@@ -357,6 +360,29 @@ class CourseEnrollmentSerializer(serializers.ModelSerializer):
                 )
         
         return data
+    
+    def validate_progress_percentage(self, value):
+        """Validate progress percentage is between 0 and 100"""
+        if not (0 <= value <= 100):
+            raise serializers.ValidationError(
+                "Progress percentage must be between 0 and 100"
+            )
+        return value
+    
+    def update(self, instance, validated_data):
+        """Custom update to handle progress-related logic"""
+        # Update completion status based on progress
+        progress = validated_data.get('progress_percentage', instance.progress_percentage)
+        
+        if progress == 100 and not instance.completed_at:
+            validated_data['completed_at'] = timezone.now()
+            validated_data['certificate_issued'] = True
+        elif progress < 100 and instance.completed_at:
+            # Reset completion if progress goes below 100%
+            validated_data['completed_at'] = None
+            validated_data['certificate_issued'] = False
+        
+        return super().update(instance, validated_data)
     
     def to_representation(self, instance):
         if instance.deleted:
@@ -752,8 +778,7 @@ class QuestionSerializer(serializers.ModelSerializer):
     
     def get_quiz_detail(self, obj):
         if obj.quiz and not obj.quiz.deleted:
-            # Import here to avoid circular import
-            from .serializers import QuizListingSerializer
+            # Remove this line: from .serializers import QuizListingSerializer
             return QuizListingSerializer(obj.quiz).data
         return None
     
@@ -918,6 +943,7 @@ class QuizAttemptListingSerializer(serializers.ModelSerializer):
         return None
 
 
+
 class QuizAttemptSerializer(serializers.ModelSerializer):
     """Full quiz attempt serializer with validations"""
     created_by = serializers.SerializerMethodField()
@@ -956,8 +982,6 @@ class QuizAttemptSerializer(serializers.ModelSerializer):
     
     def get_quiz_detail(self, obj):
         if obj.quiz and not obj.quiz.deleted:
-            # Import here to avoid circular import
-            from .serializers import QuizListingSerializer
             return QuizListingSerializer(obj.quiz).data
         return None
     
@@ -998,6 +1022,35 @@ class QuizAttemptSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Cannot use a deleted student")
         return value
     
+    def validate_start_time(self, value):
+        """Prevent start_time from being set in payload"""
+        if value is not None:
+            raise serializers.ValidationError("start_time is automatically set and cannot be modified")
+        return value
+    
+    def validate_end_time(self, value):
+        """Validate end_time is not in the past and not before start_time"""
+        if value is not None:
+            # Get start_time from instance or current time
+            if self.instance and self.instance.start_time:
+                start_time = self.instance.start_time
+            else:
+                start_time = timezone.now()
+            
+            # Check if end_time is before start_time
+            if value <= start_time:
+                raise serializers.ValidationError(
+                    "End time must be after start time"
+                )
+            
+            # For new attempts, end_time must be in future
+            if not self.instance and value < timezone.now():
+                raise serializers.ValidationError(
+                    "End time cannot be in the past"
+                )
+        
+        return value
+    
     def validate_marks_obtained(self, value):
         if value is not None and value < 0:
             raise serializers.ValidationError("Marks obtained cannot be negative")
@@ -1008,6 +1061,13 @@ class QuizAttemptSerializer(serializers.ModelSerializer):
         quiz = data.get('quiz', getattr(self.instance, 'quiz', None))
         student = data.get('student', getattr(self.instance, 'student', None))
         marks_obtained = data.get('marks_obtained')
+        end_time = data.get('end_time')
+        
+        # Get start_time from instance or use current time for validation
+        if self.instance:
+            start_time = self.instance.start_time
+        else:
+            start_time = timezone.now()
         
         # Validate marks don't exceed total
         if marks_obtained is not None and quiz:
@@ -1036,14 +1096,29 @@ class QuizAttemptSerializer(serializers.ModelSerializer):
             # Auto-set attempt number
             data['attempt_number'] = existing_attempts + 1
         
-        # Validate end_time is after start_time
-        end_time = data.get('end_time')
-        start_time = data.get('start_time', getattr(self.instance, 'start_time', None))
-        
-        if end_time and start_time and end_time <= start_time:
+        # Validate end_time is after start_time (additional check)
+        if end_time and end_time <= start_time:
             raise serializers.ValidationError({
                 'end_time': 'End time must be after start time'
             })
+        
+        # Validate status transitions
+        if self.instance:
+            current_status = self.instance.status
+            new_status = data.get('status', current_status)
+            
+            # Define allowed status transitions
+            allowed_transitions = {
+                'in_progress': ['submitted', 'in_progress'],
+                'submitted': ['graded', 'submitted'],
+                'graded': ['graded']  # Cannot go back once graded
+            }
+            
+            if current_status in allowed_transitions:
+                if new_status not in allowed_transitions[current_status]:
+                    raise serializers.ValidationError({
+                        'status': f"Cannot change status from '{current_status}' to '{new_status}'"
+                    })
         
         return data
     
@@ -1056,18 +1131,32 @@ class QuizAttemptSerializer(serializers.ModelSerializer):
         
         data = super().to_representation(instance)
         
-        if isinstance(data.get('start_time'), str):
-            data['start_time'] = data['start_time'].replace('T', ' ').split('.')[0]
-        if isinstance(data.get('end_time'), str):
-            data['end_time'] = data['end_time'].replace('T', ' ').split('.')[0]
-        if isinstance(data.get('created_at'), str):
-            data['created_at'] = data['created_at'].replace('T', ' ').split('.')[0]
-        if isinstance(data.get('updated_at'), str):
-            data['updated_at'] = data['updated_at'].replace('T', ' ').split('.')[0]
+        # Format datetime fields
+        datetime_fields = ['start_time', 'end_time', 'created_at', 'updated_at']
+        for field in datetime_fields:
+            if isinstance(data.get(field), str):
+                data[field] = data[field].replace('T', ' ').split('.')[0]
         
         return data
-
-
+    
+    def create(self, validated_data):
+        """Override create to ensure start_time is set automatically"""
+        validated_data['start_time'] = timezone.now()
+        
+        # Set status to in_progress if not provided
+        if 'status' not in validated_data:
+            validated_data['status'] = 'in_progress'
+        
+        return super().create(validated_data)
+    
+    def update(self, instance, validated_data):
+        """Override update to handle status changes"""
+        # If changing status to submitted, auto-set end_time if not provided
+        if 'status' in validated_data and validated_data['status'] == 'submitted':
+            if 'end_time' not in validated_data and not instance.end_time:
+                validated_data['end_time'] = timezone.now()
+        
+        return super().update(instance, validated_data)
 # ==================== Quiz Answer Serializers ====================
 
 class QuizAnswerListingSerializer(serializers.ModelSerializer):

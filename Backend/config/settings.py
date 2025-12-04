@@ -102,6 +102,7 @@ INSTALLED_APPS = [
     'apps.leave',
     'apps.configuration',
     'apps.report',
+    'apps.online_learning',
 
     "drf_spectacular",
     "drf_spectacular_sidecar",

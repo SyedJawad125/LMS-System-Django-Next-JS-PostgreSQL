@@ -21,6 +21,7 @@ urlpatterns = [
     path('api/leave/', include('apps.leave.urls')),
     path('api/configuration/', include('apps.configuration.urls')),
     path('api/report/', include('apps.report.urls')),
+    path('api/online/learning/', include('apps.online_learning.urls')),
     
     
 
