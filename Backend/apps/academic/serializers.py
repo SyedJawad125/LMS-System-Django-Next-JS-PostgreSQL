@@ -2,6 +2,8 @@ from rest_framework import serializers
 from django.utils.text import slugify
 from .models import AcademicYear, Department, Class, Section, Subject, ClassSubject
 from apps.users.serializers import TeacherListSerializer  # Assuming you have this
+from rest_framework import serializers
+import re
 
 # ======================= ACADEMIC YEAR SERIALIZERS =======================
 
@@ -27,7 +29,7 @@ class AcademicYearSerializer(serializers.ModelSerializer):
             'created_by', 'updated_by', 'created_at', 'updated_at',
             'sections_count', 'class_subjects_count'
         ]
-        read_only_fields = ('created_at', 'updated_at', 'created_by', 'updated_by')
+        read_only_fields = ('code', 'created_at', 'updated_at', 'created_by', 'updated_by')
     
     def get_created_by(self, obj):
         """Get created by user with fallback to username"""
@@ -57,56 +59,32 @@ class AcademicYearSerializer(serializers.ModelSerializer):
     
     def validate_name(self, value):
         """Validate academic year name"""
-        if len(value.strip()) < 4:
+        value = value.strip()
+        
+        if len(value) < 4:
             raise serializers.ValidationError("Academic year name must be at least 4 characters long")
         
         # Check for duplicate names (case-insensitive)
-        qs = AcademicYear.objects.filter(name__iexact=value.strip(), deleted=False)
+        qs = AcademicYear.objects.filter(name__iexact=value, deleted=False)
         if self.instance:
             qs = qs.exclude(id=self.instance.id)
         
         if qs.exists():
             raise serializers.ValidationError(f"Academic year with name '{value}' already exists")
         
-        return value.strip()
-    
-    def validate_code(self, value):
-        """Validate academic year code"""
-        if len(value.strip()) < 4:
-            raise serializers.ValidationError("Academic year code must be at least 4 characters long")
-        
-        # Check format (should be like "2024-25")
-        import re
-        if not re.match(r'^\d{4}-\d{2}$', value.strip()):
-            raise serializers.ValidationError("Academic year code must be in format: YYYY-YY (e.g., 2024-25)")
-        
-        # Check for duplicate codes (case-insensitive)
-        qs = AcademicYear.objects.filter(code__iexact=value.strip(), deleted=False)
-        if self.instance:
-            qs = qs.exclude(id=self.instance.id)
-        
-        if qs.exists():
-            raise serializers.ValidationError(f"Academic year with code '{value}' already exists")
-        
-        return value.strip()
+        return value
     
     def validate_dates(self, start_date, end_date):
         """Validate start and end dates"""
         if start_date >= end_date:
             raise serializers.ValidationError("End date must be after start date")
         
-        # Validate code matches dates if both are provided
-        if hasattr(self, 'initial_data') and 'code' in self.initial_data:
-            code = self.initial_data['code']
-            if code and len(code) == 7:  # YYYY-YY format
-                code_start_year = code[:4]
-                code_end_year = '20' + code[5:]  # Convert YY to YYYY
-                
-                if (str(start_date.year) != code_start_year or 
-                    str(end_date.year) != code_end_year):
-                    raise serializers.ValidationError(
-                        f"Code {code} doesn't match dates {start_date.year}-{end_date.year}"
-                    )
+        # Check if dates span appropriate duration (typically 1 year)
+        duration_days = (end_date - start_date).days
+        if duration_days < 180:  # Less than 6 months
+            raise serializers.ValidationError("Academic year must be at least 6 months long")
+        if duration_days > 730:  # More than 2 years
+            raise serializers.ValidationError("Academic year cannot be longer than 2 years")
         
         return True
     
@@ -114,45 +92,68 @@ class AcademicYearSerializer(serializers.ModelSerializer):
         """Cross-field validation"""
         start_date = attrs.get('start_date', self.instance.start_date if self.instance else None)
         end_date = attrs.get('end_date', self.instance.end_date if self.instance else None)
-        name = attrs.get('name', self.instance.name if self.instance else None)
-        code = attrs.get('code', self.instance.code if self.instance else None)
         
         if start_date and end_date:
             self.validate_dates(start_date, end_date)
         
-        # Auto-generate code if not provided but name is provided
-        if not code and name:
-            # Extract code from name (e.g., "2024-2025" -> "2024-25")
-            if '-' in name:
-                parts = name.split('-')
-                if len(parts) >= 2:
-                    start_year = parts[0].strip()
-                    end_year = parts[1].strip()
-                    if len(end_year) == 4:
-                        attrs['code'] = f"{start_year}-{end_year[2:]}"
-                    else:
-                        attrs['code'] = f"{start_year}-{end_year}"
-        
-        # Auto-generate code from dates if still not available
-        if not attrs.get('code') and start_date and end_date:
-            attrs['code'] = f"{start_date.year}-{str(end_date.year)[-2:]}"
+        # Remove code from attrs if accidentally provided
+        attrs.pop('code', None)
         
         # If setting as current, unset other current academic years
         if attrs.get('is_current', False):
-            AcademicYear.objects.filter(is_current=True, deleted=False).update(is_current=False)
+            qs = AcademicYear.objects.filter(is_current=True, deleted=False)
+            if self.instance:
+                qs = qs.exclude(id=self.instance.id)
+            qs.update(is_current=False)
         
         return attrs
     
     def create(self, validated_data):
-        """Ensure code is generated before creation"""
-        if not validated_data.get('code'):
-            # Final fallback - generate from dates
-            start_date = validated_data.get('start_date')
-            end_date = validated_data.get('end_date')
-            if start_date and end_date:
-                validated_data['code'] = f"{start_date.year}-{str(end_date.year)[-2:]}"
-        
+        """Create academic year - code will be auto-generated by model"""
         return super().create(validated_data)
+    
+    def generate_code_from_data(self, name, start_date, end_date):
+        """Generate code ensuring it stays within 20 characters"""
+        import re
+        
+        # Try to extract years from name first (e.g., "2024-2025" or "Academic Year 2024-2025")
+        year_pattern = r'(\d{4})[^0-9]*(\d{4}|\d{2})'
+        match = re.search(year_pattern, name)
+        
+        if match:
+            start_year = match.group(1)
+            end_year = match.group(2)
+            
+            # If end_year is 4 digits, take last 2
+            if len(end_year) == 4:
+                end_year = end_year[-2:]
+            
+            return f"{start_year}-{end_year}"
+        
+        # Fallback to dates
+        start_year = start_date.year
+        end_year = str(end_date.year)[-2:]
+        return f"{start_year}-{end_year}"
+    
+    def update(self, instance, validated_data):
+        """Update academic year - regenerate code if name or dates change"""
+        name_changed = 'name' in validated_data and validated_data['name'] != instance.name
+        dates_changed = ('start_date' in validated_data or 'end_date' in validated_data)
+        
+        # Update the instance
+        instance = super().update(instance, validated_data)
+        
+        # Regenerate code if name or dates changed
+        if name_changed or dates_changed:
+            new_code = self.generate_code_from_data(
+                instance.name, 
+                instance.start_date, 
+                instance.end_date
+            )
+            instance.code = new_code
+            instance.save(update_fields=['code'])
+        
+        return instance
     
     def to_representation(self, instance):
         """Customize output representation"""
@@ -166,7 +167,7 @@ class AcademicYearSerializer(serializers.ModelSerializer):
         
         data = super().to_representation(instance)
         
-        # Format datetime fields if needed
+        # Format datetime fields for better readability
         if isinstance(data.get('created_at'), str):
             data['created_at'] = data['created_at'].replace('T', ' ').split('.')[0]
         if isinstance(data.get('updated_at'), str):
@@ -185,12 +186,13 @@ class DepartmentListingSerializer(serializers.ModelSerializer):
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
-    """Full department serializer with validations"""
+    """Full department serializer with auto-generated code"""
     created_by = serializers.SerializerMethodField()
     updated_by = serializers.SerializerMethodField()
     head_detail = serializers.SerializerMethodField()
     subjects_count = serializers.SerializerMethodField()
     teachers_count = serializers.SerializerMethodField()
+    code = serializers.CharField(read_only=True)  # Make code read-only (auto-generated)
     
     class Meta:
         model = Department
@@ -199,7 +201,7 @@ class DepartmentSerializer(serializers.ModelSerializer):
             'created_by', 'updated_by', 'created_at', 'updated_at',
             'subjects_count', 'teachers_count'
         ]
-        read_only_fields = ('created_at', 'updated_at', 'created_by', 'updated_by')
+        read_only_fields = ('created_at', 'updated_at', 'created_by', 'updated_by', 'code')
     
     def get_created_by(self, obj):
         if obj.created_by:
@@ -214,21 +216,77 @@ class DepartmentSerializer(serializers.ModelSerializer):
         return None
     
     def get_head_detail(self, obj):
-        if obj.head and not obj.head.deleted:
-            return TeacherListSerializer(obj.head).data
+        if obj.head:
+            # Check if head is not deleted
+            if hasattr(obj.head, 'deleted') and obj.head.deleted:
+                return None
+            return TeacherListSerializer(obj.head, context=self.context).data
         return None
     
     def get_subjects_count(self, obj):
-        if obj.deleted:
+        if hasattr(obj, 'deleted') and obj.deleted:
             return 0
         return obj.subject_set.filter(deleted=False).count()
     
     def get_teachers_count(self, obj):
-        if obj.deleted:
+        if hasattr(obj, 'deleted') and obj.deleted:
             return 0
         # Assuming Teacher model has department field
         from apps.users.models import Teacher
         return Teacher.objects.filter(department=obj, deleted=False).count()
+    
+    def generate_short_code(self, name):
+        """Generate short code from department name"""
+        # Clean the name
+        clean_name = name.strip().upper()
+        
+        # Remove common words that don't add value
+        stop_words = ['OF', 'AND', 'THE', 'IN', 'FOR', 'TO']
+        words = clean_name.split()
+        words = [w for w in words if w not in stop_words]
+        
+        # Strategy 1: If single word, take first 2-4 characters
+        if len(words) == 1:
+            word = words[0]
+            if len(word) <= 4:
+                base_code = word
+            else:
+                base_code = word[:4]
+        
+        # Strategy 2: Multiple words, take first letter of each word
+        elif len(words) >= 2:
+            base_code = ''.join([w[0] for w in words])
+            
+            # If code is too short (2 letters), add more characters from first word
+            if len(base_code) == 2 and len(words[0]) > 1:
+                base_code = words[0][:2] + base_code[1:]
+        else:
+            base_code = clean_name[:4]
+        
+        # Remove any special characters
+        base_code = re.sub(r'[^A-Z0-9]', '', base_code)
+        
+        # Check if this code already exists
+        existing_codes = Department.objects.filter(
+            code__startswith=base_code,
+            deleted=False
+        ).exclude(
+            id=self.instance.id if self.instance else None
+        ).values_list('code', flat=True)
+        
+        if not existing_codes:
+            return base_code
+        
+        # If base code exists, try adding sequential numbers
+        counter = 1
+        while True:
+            new_code = f"{base_code}{counter}"
+            if new_code not in existing_codes:
+                return new_code
+            counter += 1
+            if counter > 99:
+                import time
+                return f"{base_code}{int(time.time()) % 1000}"
     
     def validate_name(self, value):
         if len(value.strip()) < 2:
@@ -243,21 +301,43 @@ class DepartmentSerializer(serializers.ModelSerializer):
         
         return value.strip()
     
-    def validate_code(self, value):
-        if len(value.strip()) < 2:
-            raise serializers.ValidationError("Department code must be at least 2 characters long")
+    def validate_head(self, value):
+        """Validate that the head is an active teacher"""
+        if value and hasattr(value, 'deleted') and value.deleted:
+            raise serializers.ValidationError("Selected teacher has been deleted")
+        return value
+    
+    def create(self, validated_data):
+        """Override create to auto-generate code"""
+        name = validated_data.get('name')
         
-        qs = Department.objects.filter(code__iexact=value.strip(), deleted=False)
-        if self.instance:
-            qs = qs.exclude(id=self.instance.id)
+        # Generate code from name
+        validated_data['code'] = self.generate_short_code(name)
         
-        if qs.exists():
-            raise serializers.ValidationError(f"Department with code '{value}' already exists")
+        # Set created_by from request context
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            validated_data['created_by'] = request.user
         
-        return value.strip().upper()
+        return super().create(validated_data)
+    
+    def update(self, instance, validated_data):
+        """Override update to regenerate code if name changes"""
+        name = validated_data.get('name')
+        
+        # If name is being updated, regenerate code
+        if name and name != instance.name:
+            validated_data['code'] = self.generate_short_code(name)
+        
+        # Set updated_by from request context
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            validated_data['updated_by'] = request.user
+        
+        return super().update(instance, validated_data)
     
     def to_representation(self, instance):
-        if instance.deleted:
+        if hasattr(instance, 'deleted') and instance.deleted:
             return {
                 'id': instance.id,
                 'name': instance.name,
@@ -266,13 +346,14 @@ class DepartmentSerializer(serializers.ModelSerializer):
         
         data = super().to_representation(instance)
         
+        # Format timestamps
         if isinstance(data.get('created_at'), str):
             data['created_at'] = data['created_at'].replace('T', ' ').split('.')[0]
         if isinstance(data.get('updated_at'), str):
             data['updated_at'] = data['updated_at'].replace('T', ' ').split('.')[0]
         
         return data
-
+    
 # ======================= CLASS SERIALIZERS =======================
 
 class ClassListingSerializer(serializers.ModelSerializer):

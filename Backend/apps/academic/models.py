@@ -1,3 +1,4 @@
+import re
 from django.db import models
 from apps.users.models import Teacher
 from utils.reusable_classes import TimeUserStamps
@@ -25,25 +26,30 @@ class AcademicYear(TimeUserStamps):
         super().save(*args, **kwargs)
     
     def generate_code(self):
-        """Generate code from name or dates"""
-        # Try to extract from name first
-        if '-' in self.name:
-            parts = self.name.split('-')
-            if len(parts) >= 2:
-                start_year = parts[0].strip()
-                end_year = parts[1].strip()
-                if len(end_year) == 4:
-                    return f"{start_year}-{end_year[2:]}"
-                return f"{start_year}-{end_year}"
+        """Generate code from name or dates - ensures max 20 chars"""
+        import re
         
-        # Fallback to dates
+        # Try to extract years from name (e.g., "2024-2025" or "Academic Year 2024-2025")
+        year_pattern = r'(\d{4})[^0-9]*(\d{4}|\d{2})'
+        match = re.search(year_pattern, self.name)
+        
+        if match:
+            start_year = match.group(1)
+            end_year = match.group(2)
+            
+            # If end_year is 4 digits, take last 2
+            if len(end_year) == 4:
+                end_year = end_year[-2:]
+            
+            return f"{start_year}-{end_year}"
+        
+        # Fallback to dates (format: YYYY-YY, max 7 chars)
         start_year = self.start_date.year
-        end_year = self.end_date.year
-        return f"{start_year}-{str(end_year)[-2:]}"
+        end_year = str(self.end_date.year)[-2:]
+        return f"{start_year}-{end_year}"
     
     def __str__(self):
         return f"{self.name} ({self.code})"
-
 
 class Department(TimeUserStamps):
     """Academic Departments"""
@@ -56,10 +62,22 @@ class Department(TimeUserStamps):
         db_table = 'departments'
 
 
+# class Class(TimeUserStamps):
+#     """Class/Grade Level"""
+#     name = models.CharField(max_length=50)  # e.g., "Grade 10", "Class XII"
+#     code = models.CharField(max_length=20, unique=True)
+#     level = models.IntegerField()  # 1-12 or custom
+#     description = models.TextField(blank=True)
+    
+#     class Meta:
+#         db_table = 'classes'
+#         verbose_name_plural = 'Classes'
+#         ordering = ['level']
+
 class Class(TimeUserStamps):
     """Class/Grade Level"""
     name = models.CharField(max_length=50)  # e.g., "Grade 10", "Class XII"
-    code = models.CharField(max_length=20, unique=True)
+    code = models.CharField(max_length=20, unique=True, null=True, blank=True)  # AUTO GENERATED - e.g., "G10", "C12"
     level = models.IntegerField()  # 1-12 or custom
     description = models.TextField(blank=True)
     
@@ -67,6 +85,25 @@ class Class(TimeUserStamps):
         db_table = 'classes'
         verbose_name_plural = 'Classes'
         ordering = ['level']
+    
+    def save(self, *args, **kwargs):
+        if not self.code:
+            self.code = self.generate_code()
+        super().save(*args, **kwargs)
+    
+    def generate_code(self):
+        """Generate code from name or level"""
+        # Try to extract number from name first
+        match = re.search(r'(\d+)', self.name)
+        if match:
+            grade_num = match.group(1)
+            return f"G{grade_num}"
+        
+        # Fallback to level
+        return f"G{self.level}"
+    
+    def __str__(self):
+        return f"{self.name} (Level {self.level})"
 
 
 class Section(TimeUserStamps):
