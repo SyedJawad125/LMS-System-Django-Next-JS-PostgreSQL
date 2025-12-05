@@ -1,3 +1,4 @@
+import re
 from rest_framework import serializers
 from .models import ExamType, Exam, ExamSchedule, ExamResult, GradeSystem
 from apps.academic.serializers import AcademicYearListingSerializer, ClassListingSerializer, SubjectListingSerializer
@@ -15,10 +16,11 @@ class ExamTypeListingSerializer(serializers.ModelSerializer):
 
 
 class ExamTypeSerializer(serializers.ModelSerializer):
-    """Full exam type serializer with validations"""
+    """Full exam type serializer with validations and auto-generated code"""
     created_by = serializers.SerializerMethodField()
     updated_by = serializers.SerializerMethodField()
     exams_count = serializers.SerializerMethodField()
+    code = serializers.CharField(read_only=True)  # Make code read-only since it's auto-generated
     
     class Meta:
         model = ExamType
@@ -26,7 +28,7 @@ class ExamTypeSerializer(serializers.ModelSerializer):
             'id', 'name', 'code', 'weightage', 'description',
             'created_by', 'updated_by', 'created_at', 'updated_at', 'exams_count'
         ]
-        read_only_fields = ('created_at', 'updated_at', 'created_by', 'updated_by')
+        read_only_fields = ('created_at', 'updated_at', 'created_by', 'updated_by', 'code')
     
     def get_created_by(self, obj):
         if obj.created_by:
@@ -45,10 +47,49 @@ class ExamTypeSerializer(serializers.ModelSerializer):
             return 0
         return obj.exam_set.filter(deleted=False).count()
     
+    def generate_code_from_name(self, name):
+        """
+        Generate code from name in format: NAME_001
+        Example: "Mid Term Exam" -> "MID_TERM_EXAM_001"
+        """
+        # Clean and format the name
+        clean_name = name.strip().upper()
+        # Replace spaces and special characters with underscore
+        clean_name = re.sub(r'[^A-Z0-9]+', '_', clean_name)
+        # Remove leading/trailing underscores
+        clean_name = clean_name.strip('_')
+        
+        # Find existing codes with similar pattern
+        base_code = clean_name
+        existing_codes = ExamType.objects.filter(
+            code__startswith=base_code,
+            deleted=False
+        ).exclude(
+            id=self.instance.id if self.instance else None
+        ).values_list('code', flat=True)
+        
+        if not existing_codes:
+            # No existing codes, start with 001
+            return f"{base_code}_001"
+        
+        # Extract sequence numbers from existing codes
+        max_sequence = 0
+        for code in existing_codes:
+            # Try to extract the sequence number from the end
+            match = re.search(r'_(\d+)$', code)
+            if match:
+                seq_num = int(match.group(1))
+                max_sequence = max(max_sequence, seq_num)
+        
+        # Generate next sequence number
+        next_sequence = max_sequence + 1
+        return f"{base_code}_{next_sequence:03d}"
+    
     def validate_name(self, value):
         if len(value.strip()) < 2:
             raise serializers.ValidationError("Exam type name must be at least 2 characters long")
         
+        # Check for duplicate name (case-insensitive)
         qs = ExamType.objects.filter(name__iexact=value.strip(), deleted=False)
         if self.instance:
             qs = qs.exclude(id=self.instance.id)
@@ -58,23 +99,39 @@ class ExamTypeSerializer(serializers.ModelSerializer):
         
         return value.strip()
     
-    def validate_code(self, value):
-        if len(value.strip()) < 2:
-            raise serializers.ValidationError("Exam type code must be at least 2 characters long")
-        
-        qs = ExamType.objects.filter(code__iexact=value.strip(), deleted=False)
-        if self.instance:
-            qs = qs.exclude(id=self.instance.id)
-        
-        if qs.exists():
-            raise serializers.ValidationError(f"Exam type with code '{value}' already exists")
-        
-        return value.strip().upper()
-    
     def validate_weightage(self, value):
         if value < 0 or value > 100:
             raise serializers.ValidationError("Weightage must be between 0 and 100")
         return value
+    
+    def create(self, validated_data):
+        """Override create to auto-generate code"""
+        name = validated_data.get('name')
+        
+        # Generate code from name
+        validated_data['code'] = self.generate_code_from_name(name)
+        
+        # Set created_by from request context
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            validated_data['created_by'] = request.user
+        
+        return super().create(validated_data)
+    
+    def update(self, instance, validated_data):
+        """Override update to regenerate code if name changes"""
+        name = validated_data.get('name')
+        
+        # If name is being updated, regenerate code
+        if name and name != instance.name:
+            validated_data['code'] = self.generate_code_from_name(name)
+        
+        # Set updated_by from request context
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            validated_data['updated_by'] = request.user
+        
+        return super().update(instance, validated_data)
     
     def to_representation(self, instance):
         if instance.deleted:
@@ -86,13 +143,13 @@ class ExamTypeSerializer(serializers.ModelSerializer):
         
         data = super().to_representation(instance)
         
+        # Format timestamps
         if isinstance(data.get('created_at'), str):
             data['created_at'] = data['created_at'].replace('T', ' ').split('.')[0]
         if isinstance(data.get('updated_at'), str):
             data['updated_at'] = data['updated_at'].replace('T', ' ').split('.')[0]
         
         return data
-
 
 # ==================== Exam Serializers ====================
 
