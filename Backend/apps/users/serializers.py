@@ -924,17 +924,256 @@ class StudentSerializer(serializers.ModelSerializer):
         
         return data
 
+# class TeacherListSerializer(serializers.ModelSerializer):
+#     """Minimal serializer for teacher listings in dropdowns/references"""
+#     user_name = serializers.SerializerMethodField()
+#     user_email = serializers.SerializerMethodField()
+#     user_mobile = serializers.SerializerMethodField()
+    
+#     class Meta:
+#         model = Teacher
+#         fields = [
+#             'id', 
+#             'employee_id', 
+#             'user_name',
+#             'user_email',
+#             'user_mobile',
+#             'designation',
+#             'qualification',
+#             'specialization',
+#             'experience_years',
+#             'is_class_teacher'
+#         ]
+    
+#     def get_user_name(self, obj):
+#         """Get user's full name"""
+#         if obj.user and not obj.user.deleted:
+#             return obj.user.get_full_name()
+#         return None
+    
+#     def get_user_email(self, obj):
+#         """Get user's email"""
+#         if obj.user and not obj.user.deleted:
+#             return obj.user.email
+#         return None
+    
+#     def get_user_mobile(self, obj):
+#         """Get user's mobile"""
+#         if obj.user and not obj.user.deleted:
+#             return obj.user.mobile
+#         return None
+    
+#     def to_representation(self, instance):
+#         """Custom representation for listing"""
+#         # Handle soft-deleted instances
+#         if instance.deleted:
+#             return {
+#                 'id': instance.id,
+#                 'employee_id': instance.employee_id,
+#                 'user_name': 'Deleted Teacher',
+#                 'message': f'Teacher "{instance.employee_id}" has been deleted'
+#             }
+        
+#         data = super().to_representation(instance)
+        
+#         # Format for better display in dropdowns
+#         if data['user_name']:
+#             data['display_name'] = f"{data['user_name']} ({data['employee_id']}) - {data['designation']}"
+#         else:
+#             data['display_name'] = f"{data['employee_id']} - {data['designation']}"
+        
+#         return data
+
+# class TeacherSerializer(serializers.ModelSerializer):
+#     """Full teacher serializer with user linking"""
+#     user_id = serializers.IntegerField(write_only=True, required=False, allow_null=True)
+    
+#     class Meta:
+#         model = Teacher
+#         exclude = ['deleted', 'user']  # Exclude user, handle via user_id
+#         read_only_fields = ('created_at', 'updated_at', 'created_by', 'updated_by')
+    
+#     def validate_user_id(self, value):
+#         """Validate user exists and can be linked"""
+#         if value:
+#             try:
+#                 user = User.objects.get(id=value, deleted=False)
+#             except User.DoesNotExist:
+#                 raise serializers.ValidationError("User not found")
+            
+#             # Check if user already has a teacher profile
+#             existing_teacher = Teacher.objects.filter(user=user, deleted=False).first()
+#             if existing_teacher:
+#                 if not self.instance or self.instance.id != existing_teacher.id:
+#                     raise serializers.ValidationError(
+#                         "This user already has a teacher profile"
+#                     )
+            
+#             # Check if user is a student (not allowed)
+#             existing_student = Student.objects.filter(user=user, deleted=False).first()
+#             if existing_student:
+#                 raise serializers.ValidationError("This user is already a student")
+            
+#             # Note: Teacher CAN also be a parent - no check needed
+        
+#         return value
+    
+#     def validate_employee_id(self, value):
+#         """Validate employee ID uniqueness"""
+#         if not value or not value.strip():
+#             raise serializers.ValidationError("Employee ID is required")
+        
+#         qs = Teacher.objects.filter(
+#             employee_id__iexact=value.strip(), 
+#             deleted=False
+#         )
+#         if self.instance:
+#             qs = qs.exclude(id=self.instance.id)
+        
+#         if qs.exists():
+#             raise serializers.ValidationError(
+#                 f"Teacher with employee ID '{value}' already exists"
+#             )
+        
+#         return value.strip().upper()
+    
+#     def validate_qualification(self, value):
+#         """Validate qualification - required field"""
+#         if not value or not value.strip():
+#             raise serializers.ValidationError("Qualification is required")
+#         if len(value) > 255:
+#             raise serializers.ValidationError("Qualification cannot exceed 255 characters")
+#         return value.strip()
+    
+#     def validate_designation(self, value):
+#         """Validate designation - required field"""
+#         if not value or not value.strip():
+#             raise serializers.ValidationError("Designation is required")
+#         if len(value) > 100:
+#             raise serializers.ValidationError("Designation cannot exceed 100 characters")
+#         return value.strip()
+    
+#     def validate_experience_years(self, value):
+#         """Validate experience years"""
+#         if value is not None:
+#             if value < 0:
+#                 raise serializers.ValidationError("Experience cannot be negative")
+#             if value > 50:
+#                 raise serializers.ValidationError("Experience years seem too high")
+#         return value or 0  # Default to 0
+    
+#     def validate_joining_date(self, value):
+#         """Validate joining date"""
+#         if value and value > timezone.now().date():
+#             raise serializers.ValidationError("Joining date cannot be in the future")
+#         return value
+    
+#     def validate_salary(self, value):
+#         """Validate salary"""
+#         if value is not None and value < 0:
+#             raise serializers.ValidationError("Salary cannot be negative")
+#         return value
+    
+#     def validate(self, attrs):
+#         """Cross-field validation and auto-generation"""
+#         # Auto-generate employee ID if not provided (only on create)
+#         if not attrs.get('employee_id') and not self.instance:
+#             current_year = timezone.now().year
+#             last_teacher = Teacher.objects.filter(deleted=False).order_by('-id').first()
+#             new_num = (last_teacher.id + 1) if last_teacher else 1
+#             attrs['employee_id'] = f"EMP-{current_year}-{new_num:04d}"
+        
+#         # Set joining date to current date if not provided (only on create)
+#         if not attrs.get('joining_date') and not self.instance:
+#             attrs['joining_date'] = timezone.now().date()
+        
+#         # Required fields check for create
+#         if not self.instance:
+#             if not attrs.get('qualification'):
+#                 raise serializers.ValidationError({"qualification": "Qualification is required"})
+#             if not attrs.get('designation'):
+#                 raise serializers.ValidationError({"designation": "Designation is required"})
+        
+#         return attrs
+    
+#     @transaction.atomic
+#     def create(self, validated_data):
+#         user_id = validated_data.pop('user_id', None)
+        
+#         teacher = Teacher.objects.create(**validated_data)
+        
+#         if user_id:
+#             user = User.objects.get(id=user_id, deleted=False)
+#             teacher.user = user
+#             teacher.save(update_fields=['user'])
+#             user.type = TEACHER
+#             user.is_staff = True  # Teachers get staff access
+#             user.save(update_fields=['type', 'is_staff', 'updated_at'])
+        
+#         return teacher
+    
+#     @transaction.atomic
+#     def update(self, instance, validated_data):
+#         user_id = validated_data.pop('user_id', None)
+        
+#         if user_id is not None:
+#             current_user_id = instance.user.id if instance.user else None
+            
+#             if user_id != current_user_id:
+#                 # Reset old user
+#                 if instance.user:
+#                     old_user = instance.user
+#                     old_user.type = None
+#                     old_user.is_staff = False
+#                     old_user.save(update_fields=['type', 'is_staff', 'updated_at'])
+                
+#                 if user_id:
+#                     new_user = User.objects.get(id=user_id, deleted=False)
+#                     instance.user = new_user
+#                     new_user.type = TEACHER
+#                     new_user.is_staff = True
+#                     new_user.save(update_fields=['type', 'is_staff', 'updated_at'])
+#                 else:
+#                     instance.user = None
+        
+#         for attr, value in validated_data.items():
+#             setattr(instance, attr, value)
+        
+#         instance.save()
+#         return instance
+    
+#     def to_representation(self, instance):
+#         data = super().to_representation(instance)
+#         data['created_by'] = instance.created_by.get_full_name() if instance.created_by else None
+#         data['updated_by'] = instance.updated_by.get_full_name() if instance.updated_by else None
+        
+#         if instance.user:
+#             data['user'] = {
+#                 'id': instance.user.id,
+#                 'full_name': instance.user.full_name,
+#                 'email': instance.user.email,
+#                 'mobile': instance.user.mobile,
+#                 'is_active': instance.user.is_active,
+#                 'is_verified': instance.user.is_verified,
+#             }
+#         else:
+#             data['user'] = None
+        
+#         return data
+
+
 class TeacherListSerializer(serializers.ModelSerializer):
     """Minimal serializer for teacher listings in dropdowns/references"""
     user_name = serializers.SerializerMethodField()
     user_email = serializers.SerializerMethodField()
     user_mobile = serializers.SerializerMethodField()
+    employee_id = serializers.SerializerMethodField()
     
     class Meta:
         model = Teacher
         fields = [
             'id', 
-            'employee_id', 
+            'employee_id',
             'user_name',
             'user_email',
             'user_mobile',
@@ -944,6 +1183,10 @@ class TeacherListSerializer(serializers.ModelSerializer):
             'experience_years',
             'is_class_teacher'
         ]
+    
+    def get_employee_id(self, obj):
+        """Get employee_id from the Employee relation"""
+        return obj.employee.employee_id if obj.employee else None
     
     def get_user_name(self, obj):
         """Get user's full name"""
@@ -965,33 +1208,55 @@ class TeacherListSerializer(serializers.ModelSerializer):
     
     def to_representation(self, instance):
         """Custom representation for listing"""
-        # Handle soft-deleted instances
         if instance.deleted:
             return {
                 'id': instance.id,
-                'employee_id': instance.employee_id,
+                'employee_id': self.get_employee_id(instance),
                 'user_name': 'Deleted Teacher',
-                'message': f'Teacher "{instance.employee_id}" has been deleted'
+                'message': f'Teacher has been deleted'
             }
         
         data = super().to_representation(instance)
         
         # Format for better display in dropdowns
-        if data['user_name']:
+        if data['user_name'] and data['employee_id']:
             data['display_name'] = f"{data['user_name']} ({data['employee_id']}) - {data['designation']}"
-        else:
+        elif data['employee_id']:
             data['display_name'] = f"{data['employee_id']} - {data['designation']}"
+        else:
+            data['display_name'] = f"Teacher #{instance.id} - {data['designation']}"
         
         return data
 
+
 class TeacherSerializer(serializers.ModelSerializer):
-    """Full teacher serializer with user linking"""
+    """Full teacher serializer with user and employee linking"""
     user_id = serializers.IntegerField(write_only=True, required=False, allow_null=True)
+    employee_id = serializers.CharField(write_only=True, required=True)  # Write-only, used to find Employee
+    employee_id_display = serializers.SerializerMethodField(read_only=True)  # Read-only for response
     
     class Meta:
         model = Teacher
-        exclude = ['deleted', 'user']  # Exclude user, handle via user_id
-        read_only_fields = ('created_at', 'updated_at', 'created_by', 'updated_by')
+        fields = [
+            'id',
+            'user_id',
+            'employee_id',  # Write-only input
+            'employee_id_display',  # Read-only output
+            'qualification',
+            'specialization',
+            'experience_years',
+            'joining_date',
+            'designation',
+            'salary',
+            'is_class_teacher',
+            'created_at',
+            'updated_at'
+        ]
+        read_only_fields = ('id', 'employee_id_display', 'created_at', 'updated_at')
+    
+    def get_employee_id_display(self, obj):
+        """Get employee_id for display"""
+        return obj.employee.employee_id if obj.employee else None
     
     def validate_user_id(self, value):
         """Validate user exists and can be linked"""
@@ -1010,32 +1275,41 @@ class TeacherSerializer(serializers.ModelSerializer):
                     )
             
             # Check if user is a student (not allowed)
+            from .models import Student  # Import here to avoid circular import
             existing_student = Student.objects.filter(user=user, deleted=False).first()
             if existing_student:
                 raise serializers.ValidationError("This user is already a student")
-            
-            # Note: Teacher CAN also be a parent - no check needed
         
         return value
     
     def validate_employee_id(self, value):
-        """Validate employee ID uniqueness"""
+        """Validate employee_id exists and is not already a teacher"""
         if not value or not value.strip():
             raise serializers.ValidationError("Employee ID is required")
         
-        qs = Teacher.objects.filter(
-            employee_id__iexact=value.strip(), 
-            deleted=False
-        )
-        if self.instance:
-            qs = qs.exclude(id=self.instance.id)
+        value = value.strip()
         
-        if qs.exists():
+        # Check if Employee exists with this employee_id
+        try:
+            from .models import Employee  # Import here to avoid circular import
+            employee = Employee.objects.get(employee_id=value, deleted=False)
+        except Employee.DoesNotExist:
             raise serializers.ValidationError(
-                f"Teacher with employee ID '{value}' already exists"
+                f"Employee with ID '{value}' not found"
             )
         
-        return value.strip().upper()
+        # Check if this employee already has a teacher profile
+        existing_teacher = Teacher.objects.filter(employee=employee, deleted=False).first()
+        if existing_teacher:
+            if not self.instance or self.instance.id != existing_teacher.id:
+                raise serializers.ValidationError(
+                    f"Employee '{value}' already has a teacher profile"
+                )
+        
+        # Store the employee object for later use in create/update
+        self._validated_employee = employee
+        
+        return value
     
     def validate_qualification(self, value):
         """Validate qualification - required field"""
@@ -1060,7 +1334,7 @@ class TeacherSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Experience cannot be negative")
             if value > 50:
                 raise serializers.ValidationError("Experience years seem too high")
-        return value or 0  # Default to 0
+        return value if value is not None else 0
     
     def validate_joining_date(self, value):
         """Validate joining date"""
@@ -1075,13 +1349,14 @@ class TeacherSerializer(serializers.ModelSerializer):
         return value
     
     def validate(self, attrs):
-        """Cross-field validation and auto-generation"""
-        # Auto-generate employee ID if not provided (only on create)
-        if not attrs.get('employee_id') and not self.instance:
-            current_year = timezone.now().year
-            last_teacher = Teacher.objects.filter(deleted=False).order_by('-id').first()
-            new_num = (last_teacher.id + 1) if last_teacher else 1
-            attrs['employee_id'] = f"EMP-{current_year}-{new_num:04d}"
+        """Cross-field validation"""
+        # Validate that user_id matches employee's user if both provided
+        if attrs.get('user_id') and hasattr(self, '_validated_employee'):
+            employee = self._validated_employee
+            if employee.user and employee.user.id != attrs['user_id']:
+                raise serializers.ValidationError({
+                    "user_id": f"Employee '{employee.employee_id}' is already linked to a different user"
+                })
         
         # Set joining date to current date if not provided (only on create)
         if not attrs.get('joining_date') and not self.instance:
@@ -1099,23 +1374,47 @@ class TeacherSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
         user_id = validated_data.pop('user_id', None)
+        validated_data.pop('employee_id')  # Remove employee_id from validated_data
         
-        teacher = Teacher.objects.create(**validated_data)
+        # Get the employee object we validated earlier
+        employee = self._validated_employee
         
+        # Create teacher with employee link
+        teacher = Teacher.objects.create(
+            employee=employee,
+            **validated_data
+        )
+        
+        # Link user if provided
         if user_id:
             user = User.objects.get(id=user_id, deleted=False)
             teacher.user = user
             teacher.save(update_fields=['user'])
+            
+            # Update user type and permissions
             user.type = TEACHER
-            user.is_staff = True  # Teachers get staff access
+            user.is_staff = True
             user.save(update_fields=['type', 'is_staff', 'updated_at'])
+            
+            # Also update employee's user if not already set
+            if not employee.user:
+                employee.user = user
+                employee.save(update_fields=['user'])
         
         return teacher
     
     @transaction.atomic
     def update(self, instance, validated_data):
         user_id = validated_data.pop('user_id', None)
+        employee_id = validated_data.pop('employee_id', None)
         
+        # Update employee link if provided
+        if employee_id and hasattr(self, '_validated_employee'):
+            new_employee = self._validated_employee
+            if instance.employee != new_employee:
+                instance.employee = new_employee
+        
+        # Update user link if provided
         if user_id is not None:
             current_user_id = instance.user.id if instance.user else None
             
@@ -1127,15 +1426,22 @@ class TeacherSerializer(serializers.ModelSerializer):
                     old_user.is_staff = False
                     old_user.save(update_fields=['type', 'is_staff', 'updated_at'])
                 
+                # Set new user
                 if user_id:
                     new_user = User.objects.get(id=user_id, deleted=False)
                     instance.user = new_user
                     new_user.type = TEACHER
                     new_user.is_staff = True
                     new_user.save(update_fields=['type', 'is_staff', 'updated_at'])
+                    
+                    # Also update employee's user
+                    if instance.employee and not instance.employee.user:
+                        instance.employee.user = new_user
+                        instance.employee.save(update_fields=['user'])
                 else:
                     instance.user = None
         
+        # Update other fields
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         
@@ -1144,9 +1450,12 @@ class TeacherSerializer(serializers.ModelSerializer):
     
     def to_representation(self, instance):
         data = super().to_representation(instance)
+        
+        # Add created_by and updated_by names
         data['created_by'] = instance.created_by.get_full_name() if instance.created_by else None
         data['updated_by'] = instance.updated_by.get_full_name() if instance.updated_by else None
         
+        # Add user details
         if instance.user:
             data['user'] = {
                 'id': instance.user.id,
@@ -1159,8 +1468,17 @@ class TeacherSerializer(serializers.ModelSerializer):
         else:
             data['user'] = None
         
+        # Add employee details
+        if instance.employee:
+            data['employee'] = {
+                'id': instance.employee.id,
+                'employee_id': instance.employee.employee_id,
+                'status': instance.employee.status,
+            }
+        else:
+            data['employee'] = None
+        
         return data
-
 
 class ParentSerializer(serializers.ModelSerializer):
     """Full parent serializer with user linking"""
@@ -1179,7 +1497,7 @@ class ParentSerializer(serializers.ModelSerializer):
         read_only_fields = ('created_at', 'updated_at', 'created_by', 'updated_by')
     
     def get_children_list(self, obj):
-        return StudentListingSerializer(
+        return StudentListSerializer(
             obj.students.filter(deleted=False), 
             many=True
         ).data
