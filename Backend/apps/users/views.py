@@ -9,7 +9,7 @@ from .serializers import (LoginSerializer, LoginUserSerializer, EmptySerializer,
                           UserSerializer, RoleSerializer, RoleListingSerializer)
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from config.settings import (SIMPLE_JWT, FRONTEND_BASE_URL, PASSWORD_RESET_VALIDITY, FRONTEND_EMAIL_LINK)
-from .models import UserToken, User
+from .models import Employee, UserToken, User
 from django.utils import timezone
 from utils.helpers import generate_token
 from apps.notification.tasks import send_email
@@ -225,7 +225,133 @@ class ResetPasswordView(APIView):
             return Response(create_response(str(e)), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class EmployeeView(BaseView):
+# class EmployeeView(BaseView):
+#     permission_classes = (IsAuthenticated,)
+#     serializer_class = EmployeeSerializer
+#     filterset_class = EmployeeFilter
+
+#     @permission_required([CREATE_USER])
+#     def post(self, request):
+#         try:
+#             resp = super().post_(request)
+#             if resp.status_code == status.HTTP_201_CREATED:
+#                 self.invitation_email(request, resp.data.get('data'))
+#             return resp
+#         except Exception as e:
+#             print(str(e))
+#             return Response(create_response(str(e)), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+#     @staticmethod
+#     def invitation_email(request, resp_data):
+#         token = resp_data.pop('activation_link_token')
+#         context = {
+#             "full_name": resp_data.get('full_name'),
+#             "url": f"{FRONTEND_EMAIL_LINK}/{token}",
+#             "sender_name": request.user.full_name,
+#         }
+#         send_email.delay(USER_INVITATION, [resp_data.get('email')], context)
+
+#     @permission_required([READ_USER])
+#     def get(self, request):
+#         return super().get_(request)
+
+#     @permission_required([DELETE_USER])
+#     def delete(self, request):
+#         try:
+#             if request.query_params.get('id'):
+#                 instance = self.serializer_class.Meta.model.objects.filter(deleted=False,
+#                                                                            id=request.query_params.get('id',
+#                                                                                                        None)).first()
+#                 if instance:
+#                     with transaction.atomic():
+#                         instance.deleted = True
+#                         instance.updated_by = request.user
+#                         instance.save()
+#                         instance.user.delete()
+#                         serialized_resp = self.serializer_class(instance, context={'request': request}).data
+#                         self.delete_email(request.user, serialized_resp)
+#                     return Response(create_response(SUCCESSFUL, serialized_resp), status=status.HTTP_200_OK)
+#                 else:
+#                     return Response(create_response(NOT_FOUND), status=status.HTTP_404_NOT_FOUND)
+#             else:
+#                 return Response(create_response(ID_NOT_PROVIDED), status=status.HTTP_400_BAD_REQUEST)
+#         except Exception as e:
+#             print(str(e))
+#             return Response(create_response(str(e)), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+#     @staticmethod
+#     def delete_email(request_user, resp_data):
+#         context = {
+#             "full_name": resp_data.get('full_name'),
+#             "sender_name": request_user.full_name,
+#         }
+#         send_email.delay(USER_DELETE_EMAIL_TEMP, [resp_data.get('email')], context)
+
+
+# class EmployeeToggleView(APIView):
+#     permission_classes = (IsAuthenticated,)
+#     serializer_class = EmployeeSerializer
+#     filterset_class = None
+
+#     @permission_required([TOGGLE_USER])
+#     def delete(self, request):
+#         try:
+#             if request.query_params.get('id'):
+#                 instance = self.serializer_class.Meta.model.objects.filter(deleted=False,
+#                                                                            id=request.query_params.get('id',
+#                                                                                                        None)).first()
+#                 if instance:
+#                     with transaction.atomic():
+#                         template = USER_RE_ACTIVATED_EMAIL_TEMP
+#                         if instance.status == DEACTIVATED and instance.user.password:
+#                             instance.status = ACTIVE
+#                             instance.user.deactivated = False
+#                         elif instance.status == DEACTIVATED and not instance.user.password:
+#                             instance.status = INVITED
+#                             instance.user.deactivated = False
+#                         else:
+#                             template = USER_DEACTIVATED_EMAIL_TEMP
+#                             instance.status = DEACTIVATED
+#                             instance.user.deactivated = True
+#                         instance.updated_by = request.user
+#                         instance.user.save()
+#                         instance.save()
+#                     self.notification_email(request.user, instance.user, template)
+#                     resp_data = self.serializer_class(instance, context={'request': request}).data
+#                     return Response(create_response(SUCCESSFUL, resp_data), status=status.HTTP_200_OK)
+#                 else:
+#                     return Response(create_response(NOT_FOUND), status=status.HTTP_404_NOT_FOUND)
+#             else:
+#                 return Response(create_response(ID_NOT_PROVIDED), status=status.HTTP_400_BAD_REQUEST)
+#         except Exception as e:
+#             print(str(e))
+#             return Response(create_response(str(e)), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+#     @staticmethod
+#     def notification_email(request_user, user_instance, template):
+#         context = {
+#             "full_name": user_instance.full_name,
+#             "sender_name": request_user.full_name,
+#         }
+#         send_email.delay(template, [user_instance.email], context)
+
+
+
+
+
+
+class EmployeeView(APIView):
+    """
+    Employee View
+    
+    POST: Create new employee with existing user
+    Payload: {"user": 123, "status": "INVITED"}
+    
+    GET: List all employees with filters
+    
+    DELETE: Soft delete employee
+    Query Params: ?id=1
+    """
     permission_classes = (IsAuthenticated,)
     serializer_class = EmployeeSerializer
     filterset_class = EmployeeFilter
@@ -233,54 +359,159 @@ class EmployeeView(BaseView):
     @permission_required([CREATE_USER])
     def post(self, request):
         try:
-            resp = super().post_(request)
-            if resp.status_code == status.HTTP_201_CREATED:
-                self.invitation_email(request, resp.data.get('data'))
-            return resp
+            serializer = self.serializer_class(data=request.data, context={'request': request})
+            
+            if serializer.is_valid():
+                instance = serializer.save()
+                response_data = self.serializer_class(instance, context={'request': request}).data
+                
+                # Send invitation email
+                self.invitation_email(request, response_data)
+                
+                return Response(
+                    create_response(SUCCESSFUL, response_data), 
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                return Response(
+                    create_response(serializer.errors), 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
         except Exception as e:
             print(str(e))
-            return Response(create_response(str(e)), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                create_response(str(e)), 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @staticmethod
     def invitation_email(request, resp_data):
-        token = resp_data.pop('activation_link_token')
-        context = {
-            "full_name": resp_data.get('full_name'),
-            "url": f"{FRONTEND_EMAIL_LINK}/{token}",
-            "sender_name": request.user.full_name,
-        }
-        send_email.delay(USER_INVITATION, [resp_data.get('email')], context)
+        """Send invitation email to employee"""
+        token = resp_data.get('activation_link_token')
+        if token:
+            context = {
+                "full_name": resp_data.get('full_name'),
+                "url": f"{FRONTEND_EMAIL_LINK}/{token}",
+                "sender_name": request.user.full_name,
+            }
+            send_email.delay(USER_INVITATION, [resp_data.get('email')], context)
 
     @permission_required([READ_USER])
     def get(self, request):
-        return super().get_(request)
+        try:
+            # Get query params
+            employee_id = request.query_params.get('id')
+            
+            if employee_id:
+                # Get single employee
+                instance = Employee.objects.filter(
+                    id=employee_id, 
+                    deleted=False
+                ).first()
+                
+                if instance:
+                    serialized_data = self.serializer_class(
+                        instance, 
+                        context={'request': request}
+                    ).data
+                    return Response(
+                        create_response(SUCCESSFUL, serialized_data), 
+                        status=status.HTTP_200_OK
+                    )
+                else:
+                    return Response(
+                        create_response(NOT_FOUND), 
+                        status=status.HTTP_404_NOT_FOUND
+                    )
+            else:
+                # List all employees with filters
+                queryset = Employee.objects.filter(deleted=False).order_by('-created_at')
+                
+                # Apply filters if filterset_class is defined
+                if self.filterset_class:
+                    filterset = self.filterset_class(request.query_params, queryset=queryset)
+                    queryset = filterset.qs
+                
+                # Pagination (if needed)
+                page_size = int(request.query_params.get('page_size', 10))
+                page = int(request.query_params.get('page', 1))
+                start = (page - 1) * page_size
+                end = start + page_size
+                
+                total_count = queryset.count()
+                paginated_queryset = queryset[start:end]
+                
+                serialized_data = self.serializer_class(
+                    paginated_queryset, 
+                    many=True, 
+                    context={'request': request}
+                ).data
+                
+                return Response(
+                    create_response(SUCCESSFUL, serialized_data, count=total_count), 
+                    status=status.HTTP_200_OK
+                )
+        except Exception as e:
+            print(str(e))
+            return Response(
+                create_response(str(e)), 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @permission_required([DELETE_USER])
     def delete(self, request):
         try:
-            if request.query_params.get('id'):
-                instance = self.serializer_class.Meta.model.objects.filter(deleted=False,
-                                                                           id=request.query_params.get('id',
-                                                                                                       None)).first()
-                if instance:
-                    with transaction.atomic():
-                        instance.deleted = True
-                        instance.updated_by = request.user
-                        instance.save()
-                        instance.user.delete()
-                        serialized_resp = self.serializer_class(instance, context={'request': request}).data
-                        self.delete_email(request.user, serialized_resp)
-                    return Response(create_response(SUCCESSFUL, serialized_resp), status=status.HTTP_200_OK)
-                else:
-                    return Response(create_response(NOT_FOUND), status=status.HTTP_404_NOT_FOUND)
-            else:
-                return Response(create_response(ID_NOT_PROVIDED), status=status.HTTP_400_BAD_REQUEST)
+            employee_id = request.query_params.get('id')
+            
+            if not employee_id:
+                return Response(
+                    create_response(ID_NOT_PROVIDED), 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            instance = Employee.objects.filter(
+                id=employee_id, 
+                deleted=False
+            ).first()
+            
+            if not instance:
+                return Response(
+                    create_response(NOT_FOUND), 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            with transaction.atomic():
+                # Soft delete employee
+                instance.deleted = True
+                instance.updated_by = request.user
+                instance.save()
+                
+                # Delete associated user
+                if instance.user:
+                    instance.user.delete()
+                
+                serialized_resp = self.serializer_class(
+                    instance, 
+                    context={'request': request}
+                ).data
+                
+                # Send deletion email
+                self.delete_email(request.user, serialized_resp)
+            
+            return Response(
+                create_response(SUCCESSFUL, serialized_resp), 
+                status=status.HTTP_200_OK
+            )
         except Exception as e:
             print(str(e))
-            return Response(create_response(str(e)), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                create_response(str(e)), 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @staticmethod
     def delete_email(request_user, resp_data):
+        """Send deletion notification email"""
         context = {
             "full_name": resp_data.get('full_name'),
             "sender_name": request_user.full_name,
@@ -289,51 +520,162 @@ class EmployeeView(BaseView):
 
 
 class EmployeeToggleView(APIView):
+    """
+    Toggle Employee Status (Activate/Deactivate)
+    
+    DELETE: Toggle employee status between ACTIVE and DEACTIVATED
+    Query Params: ?id=1
+    """
     permission_classes = (IsAuthenticated,)
     serializer_class = EmployeeSerializer
-    filterset_class = None
 
     @permission_required([TOGGLE_USER])
     def delete(self, request):
         try:
-            if request.query_params.get('id'):
-                instance = self.serializer_class.Meta.model.objects.filter(deleted=False,
-                                                                           id=request.query_params.get('id',
-                                                                                                       None)).first()
-                if instance:
-                    with transaction.atomic():
-                        template = USER_RE_ACTIVATED_EMAIL_TEMP
-                        if instance.status == DEACTIVATED and instance.user.password:
-                            instance.status = ACTIVE
-                            instance.user.deactivated = False
-                        elif instance.status == DEACTIVATED and not instance.user.password:
-                            instance.status = INVITED
-                            instance.user.deactivated = False
-                        else:
-                            template = USER_DEACTIVATED_EMAIL_TEMP
-                            instance.status = DEACTIVATED
-                            instance.user.deactivated = True
-                        instance.updated_by = request.user
+            employee_id = request.query_params.get('id')
+            
+            if not employee_id:
+                return Response(
+                    create_response(ID_NOT_PROVIDED), 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            instance = Employee.objects.filter(
+                id=employee_id, 
+                deleted=False
+            ).first()
+            
+            if not instance:
+                return Response(
+                    create_response(NOT_FOUND), 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            with transaction.atomic():
+                template = USER_RE_ACTIVATED_EMAIL_TEMP
+                
+                # Toggle status logic
+                if instance.status == DEACTIVATED:
+                    # Reactivating
+                    if instance.user and instance.user.password:
+                        instance.status = ACTIVE
+                    else:
+                        instance.status = INVITED
+                    
+                    if instance.user:
+                        instance.user.deactivated = False
                         instance.user.save()
-                        instance.save()
-                    self.notification_email(request.user, instance.user, template)
-                    resp_data = self.serializer_class(instance, context={'request': request}).data
-                    return Response(create_response(SUCCESSFUL, resp_data), status=status.HTTP_200_OK)
                 else:
-                    return Response(create_response(NOT_FOUND), status=status.HTTP_404_NOT_FOUND)
-            else:
-                return Response(create_response(ID_NOT_PROVIDED), status=status.HTTP_400_BAD_REQUEST)
+                    # Deactivating
+                    template = USER_DEACTIVATED_EMAIL_TEMP
+                    instance.status = DEACTIVATED
+                    
+                    if instance.user:
+                        instance.user.deactivated = True
+                        instance.user.save()
+                
+                instance.updated_by = request.user
+                instance.save()
+            
+            # Send notification email
+            if instance.user:
+                self.notification_email(request.user, instance.user, template)
+            
+            resp_data = self.serializer_class(
+                instance, 
+                context={'request': request}
+            ).data
+            
+            return Response(
+                create_response(SUCCESSFUL, resp_data), 
+                status=status.HTTP_200_OK
+            )
         except Exception as e:
             print(str(e))
-            return Response(create_response(str(e)), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                create_response(str(e)), 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @staticmethod
     def notification_email(request_user, user_instance, template):
+        """Send status change notification email"""
         context = {
             "full_name": user_instance.full_name,
             "sender_name": request_user.full_name,
         }
         send_email.delay(template, [user_instance.email], context)
+
+
+class EmployeeUpdateView(APIView):
+    """
+    Update Employee
+    
+    PUT/PATCH: Update employee details
+    Query Params: ?id=1
+    Payload: {"status": "ACTIVE"}
+    """
+    permission_classes = (IsAuthenticated,)
+    serializer_class = EmployeeSerializer
+
+    @permission_required([UPDATE_USER])
+    def put(self, request):
+        return self.update_employee(request, partial=False)
+    
+    @permission_required([UPDATE_USER])
+    def patch(self, request):
+        return self.update_employee(request, partial=True)
+    
+    def update_employee(self, request, partial=False):
+        try:
+            employee_id = request.query_params.get('id')
+            
+            if not employee_id:
+                return Response(
+                    create_response(ID_NOT_PROVIDED), 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            instance = Employee.objects.filter(
+                id=employee_id, 
+                deleted=False
+            ).first()
+            
+            if not instance:
+                return Response(
+                    create_response(NOT_FOUND), 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            serializer = self.serializer_class(
+                instance, 
+                data=request.data, 
+                partial=partial,
+                context={'request': request}
+            )
+            
+            if serializer.is_valid():
+                updated_instance = serializer.save()
+                response_data = self.serializer_class(
+                    updated_instance, 
+                    context={'request': request}
+                ).data
+                
+                return Response(
+                    create_response(SUCCESSFUL, response_data), 
+                    status=status.HTTP_200_OK
+                )
+            else:
+                return Response(
+                    create_response(serializer.errors), 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except Exception as e:
+            print(str(e))
+            return Response(
+                create_response(str(e)), 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class PermissionView(BaseView):

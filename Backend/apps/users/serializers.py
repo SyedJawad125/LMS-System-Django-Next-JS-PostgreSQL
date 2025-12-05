@@ -159,37 +159,151 @@ class UserListSerializer(serializers.ModelSerializer):
         data['role'] = RoleListingSerializer(instance.role).data if instance.role else None
         return data
 
+# class EmployeeSerializer(serializers.ModelSerializer):
+#     # Add these fields to accept user data
+#     username = serializers.CharField(write_only=True, required=True)
+#     first_name = serializers.CharField(write_only=True, required=True)
+#     last_name = serializers.CharField(write_only=True, required=True)
+#     password = serializers.CharField(write_only=True, required=True)
+    
+#     class Meta:
+#         model = Employee
+#         exclude = ('deleted',)
+    
+#     def create(self, validated_data):
+#         request = self.context.get('request')
+        
+#         # Extract user data from validated_data
+#         user_data = {
+#             'username': validated_data.pop('username'),
+#             'first_name': validated_data.pop('first_name'),
+#             'last_name': validated_data.pop('last_name'),
+#             'password': validated_data.pop('password'),
+#             'type': EMPLOYEE  # Add employee type
+#         }
+        
+#         # Add optional user fields if present
+#         optional_fields = ['email', 'mobile', 'address']
+#         for field in optional_fields:
+#             if field in validated_data:
+#                 user_data[field] = validated_data.pop(field)
+        
+#         with transaction.atomic():
+#             # Create User first
+#             user_serializer = UserSerializer(data=user_data)
+#             if user_serializer.is_valid():
+#                 user_instance = user_serializer.save()
+#             else:
+#                 raise serializers.ValidationError(user_serializer.errors)
+            
+#             # Create Employee
+#             instance = Employee.objects.create(
+#                 user=user_instance, 
+#                 **validated_data
+#             )
+        
+#         return instance
+
+
+
+
 class EmployeeSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Employee model.
+    Expects user ID in the payload.
+    
+    Payload example:
+    {
+        "user": 123,
+        "status": "INVITED"
+    }
+    """
+    
+    # Read-only fields to display user info in response
+    full_name = serializers.CharField(source='user.full_name', read_only=True)
+    email = serializers.EmailField(source='user.email', read_only=True)
+    username = serializers.CharField(source='user.username', read_only=True)
+    mobile = serializers.CharField(source='user.mobile', read_only=True)
+    address = serializers.CharField(source='user.address', read_only=True)
+    is_active = serializers.BooleanField(source='user.is_active', read_only=True)
+    is_verified = serializers.BooleanField(source='user.is_verified', read_only=True)
+    activation_link_token = serializers.CharField(source='user.activation_link_token', read_only=True)
+    
     class Meta:
         model = Employee
-        exclude = ('deleted',)
-
+        fields = '__all__'
+        read_only_fields = ('employee_id', 'created_at', 'updated_at', 'deleted')
+    
+    def validate_user(self, value):
+        """Validate that user exists and is of type EMPLOYEE"""
+        if not value:
+            raise serializers.ValidationError("User is required.")
+        
+        # Check if user already has an employee record
+        if Employee.objects.filter(user=value, deleted=False).exists():
+            raise serializers.ValidationError("This user already has an employee record.")
+        
+        # Optional: Check if user type is EMPLOYEE
+        # if value.type != 'EMPLOYEE':
+        #     raise serializers.ValidationError("User must be of type EMPLOYEE.")
+        
+        return value
+    
+    def to_representation(self, instance):
+        """Customize the output representation"""
+        representation = super().to_representation(instance)
+        
+        # Add user details to response
+        if instance.user:
+            representation['full_name'] = instance.user.full_name
+            representation['email'] = instance.user.email
+            representation['username'] = instance.user.username
+            representation['mobile'] = instance.user.mobile
+            representation['address'] = instance.user.address
+            representation['is_active'] = instance.user.is_active
+            representation['is_verified'] = instance.user.is_verified
+            representation['activation_link_token'] = instance.user.activation_link_token
+            
+            if instance.user.role:
+                representation['role'] = {
+                    'id': instance.user.role.id,
+                    'name': instance.user.role.name,
+                    'code_name': instance.user.role.code_name
+                }
+        
+        return representation
+    
     def create(self, validated_data):
         request = self.context.get('request')
-        request.data['type'] = EMPLOYEE
-        with transaction.atomic():
-            user_instance = UserSerializer(data=request.data)
-            if user_instance.is_valid():
-                user_instance = user_instance.save()
-            else:
-                transaction.set_rollback(True)
-                raise Exception(get_first_error(user_instance.errors))
-
-            instance = Employee.objects.create(user=user_instance, **validated_data)
+        
+        # Set created_by and updated_by
+        if request and hasattr(request, 'user'):
+            validated_data['created_by'] = request.user
+            validated_data['updated_by'] = request.user
+        
+        # Create Employee with user_id
+        instance = Employee.objects.create(**validated_data)
+        
         return instance
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
+    
+    def update(self, instance, validated_data):
         request = self.context.get('request')
-        data['created_by'] = instance.created_by.full_name
-        data['updated_by'] = instance.updated_by.full_name if instance.updated_by else None
-        user_data = UserListSerializer(instance.user).data
-        del user_data['id']
-        del data['user']
-        data.update(user_data)
-        if request.method == POST:
-            data['activation_link_token'] = instance.user.activation_link_token
-        return data
+        
+        # Don't allow changing the user relationship
+        if 'user' in validated_data:
+            raise serializers.ValidationError("Cannot change the user for an existing employee.")
+        
+        # Set updated_by
+        if request and hasattr(request, 'user'):
+            validated_data['updated_by'] = request.user
+        
+        # Update employee fields
+        for key, value in validated_data.items():
+            setattr(instance, key, value)
+        
+        instance.save()
+        
+        return instance
 
 
 class RoleListingSerializer(serializers.ModelSerializer):
@@ -643,7 +757,6 @@ class StudentListSerializer(serializers.ModelSerializer):
         return obj.user.mobile if obj.user else None
 
 
-
 class StudentSerializer(serializers.ModelSerializer):
     """Full student serializer with user linking"""
     guardian_count = serializers.SerializerMethodField()
@@ -652,7 +765,7 @@ class StudentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
         exclude = ['deleted', 'user']  # Exclude user, handle via user_id
-        read_only_fields = ('created_at', 'updated_at', 'created_by', 'updated_by')
+        read_only_fields = ('created_at', 'updated_at', 'created_by', 'updated_by', 'admission_number')
     
     def get_guardian_count(self, obj):
         return obj.parents.filter(deleted=False).count()
@@ -684,25 +797,6 @@ class StudentSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("This user is already a parent")
         
         return value
-    
-    def validate_admission_number(self, value):
-        """Validate admission number uniqueness"""
-        if not value or not value.strip():
-            raise serializers.ValidationError("Admission number is required")
-        
-        qs = Student.objects.filter(
-            admission_number__iexact=value.strip(), 
-            deleted=False
-        )
-        if self.instance:
-            qs = qs.exclude(id=self.instance.id)
-        
-        if qs.exists():
-            raise serializers.ValidationError(
-                f"Student with admission number '{value}' already exists"
-            )
-        
-        return value.strip().upper()
     
     def validate_roll_number(self, value):
         """Validate roll number uniqueness"""
@@ -737,14 +831,7 @@ class StudentSerializer(serializers.ModelSerializer):
         return value
     
     def validate(self, attrs):
-        """Cross-field validation and auto-generation"""
-        # Auto-generate admission number if not provided (only on create)
-        if not attrs.get('admission_number') and not self.instance:
-            current_year = timezone.now().year
-            last_student = Student.objects.filter(deleted=False).order_by('-id').first()
-            new_num = (last_student.id + 1) if last_student else 1
-            attrs['admission_number'] = f"ADM-{current_year}-{new_num:04d}"
-        
+        """Cross-field validation"""
         # Set admission date to current date if not provided (only on create)
         if not attrs.get('admission_date') and not self.instance:
             attrs['admission_date'] = timezone.now().date()
@@ -755,9 +842,19 @@ class StudentSerializer(serializers.ModelSerializer):
         
         return attrs
     
+    def _generate_admission_number(self):
+        """Generate unique admission number"""
+        current_year = timezone.now().year
+        last_student = Student.objects.filter(deleted=False).order_by('-id').first()
+        new_num = (last_student.id + 1) if last_student else 1
+        return f"ADM-{current_year}-{new_num:04d}"
+    
     @transaction.atomic
     def create(self, validated_data):
         user_id = validated_data.pop('user_id', None)
+        
+        # Auto-generate admission number
+        validated_data['admission_number'] = self._generate_admission_number()
         
         # Create student
         student = Student.objects.create(**validated_data)
@@ -776,6 +873,9 @@ class StudentSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def update(self, instance, validated_data):
         user_id = validated_data.pop('user_id', None)
+        
+        # Remove admission_number from validated_data if present (shouldn't be updated)
+        validated_data.pop('admission_number', None)
         
         # Handle user linking/unlinking
         if user_id is not None:
@@ -823,7 +923,6 @@ class StudentSerializer(serializers.ModelSerializer):
             data['user'] = None
         
         return data
-
 
 class TeacherListSerializer(serializers.ModelSerializer):
     """Minimal serializer for teacher listings in dropdowns/references"""

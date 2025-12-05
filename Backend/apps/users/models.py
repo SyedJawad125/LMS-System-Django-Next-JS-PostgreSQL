@@ -1,3 +1,4 @@
+import datetime
 import uuid
 from django.db import models
 from utils.reusable_classes import TimeStamps, TimeUserStamps
@@ -117,15 +118,83 @@ class UserToken(TimeStamps):
     device_token = models.TextField(max_length=512, null=True, blank=True)
 
 
+# class Employee(TimeUserStamps):
+#     status_choices = (
+#         (INVITED, INVITED),
+#         (ACTIVE, ACTIVE),
+#         (DEACTIVATED, DEACTIVATED),
+#     )
+#     user = models.OneToOneField('User', on_delete=models.SET_NULL, related_name="user_employee", null=True, blank=True)
+#     status = models.CharField(max_length=20, choices=status_choices, default=INVITED)
+
+
+
 class Employee(TimeUserStamps):
     status_choices = (
         (INVITED, INVITED),
         (ACTIVE, ACTIVE),
         (DEACTIVATED, DEACTIVATED),
     )
-    user = models.OneToOneField('User', on_delete=models.SET_NULL, related_name="user_employee", null=True, blank=True)
+    
+    user = models.OneToOneField(
+        'User', 
+        on_delete=models.SET_NULL, 
+        related_name="user_employee", 
+        null=True, 
+        blank=True
+    )
+    employee_id = models.CharField(max_length=50, unique=True, editable=False)
     status = models.CharField(max_length=20, choices=status_choices, default=INVITED)
-
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.employee_id} - {self.user.full_name if self.user else 'No User'}"
+    
+    def generate_employee_id(self):
+        """Generate a unique employee ID in format: EMP2024-000001"""
+        current_year = datetime.datetime.now().year
+        
+        # Get the highest sequence number for current year
+        employees_this_year = Employee.objects.filter(
+            employee_id__startswith=f"EMP{current_year}"
+        ).order_by('-employee_id')
+        
+        if employees_this_year.exists():
+            # Extract sequence numbers and find max
+            max_sequence = 0
+            for emp in employees_this_year:
+                try:
+                    # For format EMP2024-000123
+                    parts = emp.employee_id.split('-')
+                    if len(parts) == 2:
+                        seq = int(parts[1])
+                        max_sequence = max(max_sequence, seq)
+                except (ValueError, IndexError):
+                    continue
+            
+            sequence = max_sequence + 1
+        else:
+            sequence = 1
+        
+        return f"EMP{current_year}-{sequence:06d}"
+    
+    def save(self, *args, **kwargs):
+        # Generate employee_id only if it doesn't exist
+        if not self.employee_id:
+            max_attempts = 10
+            for attempt in range(max_attempts):
+                new_id = self.generate_employee_id()
+                if not Employee.objects.filter(employee_id=new_id).exists():
+                    self.employee_id = new_id
+                    break
+                if attempt == max_attempts - 1:
+                    # Fallback: use timestamp
+                    timestamp = int(datetime.datetime.now().timestamp())
+                    self.employee_id = f"EMP{timestamp}"
+        
+        super().save(*args, **kwargs)
 
 
 class Student(TimeUserStamps):
@@ -168,21 +237,59 @@ class Student(TimeUserStamps):
     def __str__(self):
         return f"{self.admission_number} - {self.user.get_full_name() if self.user else 'No User'}"
 
+# class Teacher(TimeUserStamps):
+#     """Teacher Profile"""
+#     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='teacher_profile', null=True, blank=True)
+#     employee_id = models.CharField(max_length=50, unique=True)
+#     qualification = models.CharField(max_length=255)
+#     specialization = models.CharField(max_length=255, blank=True)
+#     experience_years = models.IntegerField(default=0)
+#     joining_date = models.DateField()
+#     designation = models.CharField(max_length=100)
+#     # department = models.ForeignKey('Department', on_delete=models.SET_NULL, null=True)
+#     salary = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+#     is_class_teacher = models.BooleanField(default=False)
+    
+#     class Meta:
+#         db_table = 'teachers'
+
+
 class Teacher(TimeUserStamps):
     """Teacher Profile"""
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='teacher_profile', null=True, blank=True)
-    employee_id = models.CharField(max_length=50, unique=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, 
+                                related_name='teacher_profile', null=True, blank=True)
+    employee = models.OneToOneField('Employee', on_delete=models.CASCADE, 
+                                   related_name='teacher', null=True, blank=True)
     qualification = models.CharField(max_length=255)
     specialization = models.CharField(max_length=255, blank=True)
     experience_years = models.IntegerField(default=0)
     joining_date = models.DateField()
     designation = models.CharField(max_length=100)
-    # department = models.ForeignKey('Department', on_delete=models.SET_NULL, null=True)
     salary = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     is_class_teacher = models.BooleanField(default=False)
     
     class Meta:
         db_table = 'teachers'
+    
+    def save(self, *args, **kwargs):
+        # Auto-create Employee record if creating a new Teacher without one
+        if not self.pk and not self.employee:
+            employee = Employee.objects.create(user=self.user, status=ACTIVE)
+            self.employee = employee
+        
+        super().save(*args, **kwargs)
+    
+    @property
+    def employee_id(self):
+        """Get employee_id from Employee model - Read only property"""
+        return self.employee.employee_id if self.employee else None
+    
+    def get_employee_id_display(self):
+        """Display employee ID"""
+        return self.employee_id or "Not assigned"
+    
+    def __str__(self):
+        return f"{self.employee_id} - {self.user.get_full_name() if self.user else 'No User'}"
 
 
 class Parent(TimeUserStamps):
