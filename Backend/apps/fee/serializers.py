@@ -31,7 +31,7 @@ class FeeTypeSerializer(serializers.ModelSerializer):
             'id', 'name', 'code', 'description', 'is_recurring',
             'created_by', 'updated_by', 'created_at', 'updated_at', 'structures_count'
         ]
-        read_only_fields = ('created_at', 'updated_at', 'created_by', 'updated_by')
+        read_only_fields = ('code', 'created_at', 'updated_at', 'created_by', 'updated_by')
     
     def get_created_by(self, obj):
         if obj.created_by:
@@ -50,6 +50,25 @@ class FeeTypeSerializer(serializers.ModelSerializer):
             return 0
         return obj.feestructure_set.filter(deleted=False).count()
     
+    def _generate_code(self, name):
+        """Generate unique code from name with incremental number"""
+        # Create base code from first 3 letters of name
+        base_code = ''.join(filter(str.isalnum, name[:3])).upper()
+        if len(base_code) < 3:
+            base_code = base_code.ljust(3, 'X')
+        
+        # Find the next available number
+        counter = 1
+        while True:
+            code = f"{base_code}{counter:03d}"
+            exists = FeeType.objects.filter(code=code, deleted=False).exists()
+            if self.instance:
+                exists = exists and not FeeType.objects.filter(code=code, id=self.instance.id).exists()
+            
+            if not exists:
+                return code
+            counter += 1
+    
     def validate_name(self, value):
         if len(value.strip()) < 2:
             raise serializers.ValidationError("Fee type name must be at least 2 characters long")
@@ -63,18 +82,16 @@ class FeeTypeSerializer(serializers.ModelSerializer):
         
         return value.strip()
     
-    def validate_code(self, value):
-        if len(value.strip()) < 2:
-            raise serializers.ValidationError("Fee type code must be at least 2 characters long")
-        
-        qs = FeeType.objects.filter(code__iexact=value.strip(), deleted=False)
-        if self.instance:
-            qs = qs.exclude(id=self.instance.id)
-        
-        if qs.exists():
-            raise serializers.ValidationError(f"Fee type with code '{value}' already exists")
-        
-        return value.strip().upper()
+    def create(self, validated_data):
+        # Generate code from name
+        validated_data['code'] = self._generate_code(validated_data['name'])
+        return super().create(validated_data)
+    
+    def update(self, instance, validated_data):
+        # If name is being updated, regenerate code
+        if 'name' in validated_data and validated_data['name'] != instance.name:
+            validated_data['code'] = self._generate_code(validated_data['name'])
+        return super().update(instance, validated_data)
     
     def to_representation(self, instance):
         if instance.deleted:
