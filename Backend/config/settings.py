@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+from decouple import config
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -103,6 +104,7 @@ INSTALLED_APPS = [
     'apps.configuration',
     'apps.report',
     'apps.online_learning',
+    'apps.rag_system',
 
     "drf_spectacular",
     "drf_spectacular_sidecar",
@@ -213,6 +215,12 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# RAG Configuration
+RAG_SETTINGS = {
+    'GROQ_API_KEY': config('GROQ_API_KEY'),
+    'GROQ_MODEL': 'llama-3.1-70b-versatile',
+    'VECTOR_STORE_PATH': BASE_DIR / 'data' / 'vectorstore',
+}
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'static'

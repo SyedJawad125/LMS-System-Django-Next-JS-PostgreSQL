@@ -18,3 +18,22 @@ drf-spectacular
 drf-spectacular-sidecar
 gunicorn==23.0.0
 django-ckeditor-5==0.2.18
+
+
+# RAG & LLM
+groq==0.9.0
+langchain==0.2.16
+langchain-groq==0.1.9
+langchain-community==0.2.16
+langchain-chroma==0.1.2
+
+# Vector Store
+chromadb==0.5.0
+sentence-transformers==3.0.1
+
+# PDF Processing
+PyPDF2==3.0.1
+python-docx==1.1.0
+
+# Utilities
+python-decouple==3.8

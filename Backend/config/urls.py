@@ -15,6 +15,7 @@ urlpatterns = [
     path('api/timetable/', include('apps.timetable.urls')),
     path('api/exams/', include('apps.exams.urls')),
     path('api/fee/', include('apps.fee.urls')),
+    path('api/transport/', include('apps.transport.urls')),
     path('api/communication/', include('apps.communication.urls')),
     path('api/homework/assignment/', include('apps.homework_assignments.urls')),
     path('api/certificate/', include('apps.certificate.urls')),
@@ -22,6 +23,7 @@ urlpatterns = [
     path('api/configuration/', include('apps.configuration.urls')),
     path('api/report/', include('apps.report.urls')),
     path('api/online/learning/', include('apps.online_learning.urls')),
+    path('api/rag/', include('apps.rag_system.urls')),
     
     
 

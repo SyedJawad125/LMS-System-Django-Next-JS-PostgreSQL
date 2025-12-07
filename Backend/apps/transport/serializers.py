@@ -3,7 +3,7 @@ from rest_framework import serializers
 from django.core.validators import MinValueValidator, MaxValueValidator
 from .models import Route, Vehicle, TransportAllocation
 from apps.academic.serializers import AcademicYearListingSerializer
-from apps.users.serializers import StudentListingSerializer
+from apps.users.serializers import StudentListSerializer
 
 
 # ==================== Route Serializers ====================
@@ -376,7 +376,7 @@ class TransportAllocationSerializer(serializers.ModelSerializer):
     
     def get_student_detail(self, obj):
         if obj.student and not obj.student.deleted:
-            return StudentListingSerializer(obj.student).data
+            return StudentListSerializer(obj.student).data
         return None
     
     def get_route_detail(self, obj):
