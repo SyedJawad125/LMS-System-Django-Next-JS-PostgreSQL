@@ -273,3 +273,57 @@ def safe_json_loads(text: str) -> Any:
         return json.loads(text)
     except Exception:
         return {}
+
+
+
+# Create this file for debugging
+
+from apps.rag_system.services.database_connector import DatabaseConnector
+
+def explore_database():
+    """Explore what's in your database"""
+    db = DatabaseConnector()
+    
+    print("🔍 Exploring Your PostgreSQL Database")
+    print("=" * 60)
+    
+    # Get all tables
+    all_tables = db.get_all_tables()
+    print(f"📊 Found {len(all_tables)} tables")
+    
+    # Group by likely entity type
+    entity_groups = {}
+    
+    for table in all_tables:
+        analysis = db.analyze_table_content(table)
+        entity_type = analysis.get("entity_type", "unknown")
+        
+        if entity_type not in entity_groups:
+            entity_groups[entity_type] = []
+        entity_groups[entity_type].append(table)
+    
+    print("\n🏷️ Tables grouped by entity type:")
+    for entity, tables in sorted(entity_groups.items()):
+        print(f"\n{entity.upper()}:")
+        for table in tables:
+            analysis = db.analyze_table_content(table)
+            row_count = analysis.get("row_count", 0)
+            print(f"  • {table} ({row_count} rows)")
+    
+    print("\n🧪 Test queries:")
+    test_queries = [
+        "how many users",
+        "show me students", 
+        "count teachers",
+        "list roles",
+        "how many classes"
+    ]
+    
+    for query in test_queries:
+        print(f"\n📝 Query: '{query}'")
+        best_table = db.get_best_table_for_query(query)
+        if best_table:
+            print(f"   → Would query: {best_table}")
+
+if __name__ == "__main__":
+    explore_database()
