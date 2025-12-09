@@ -1,4 +1,7 @@
 # NEW FILE: Create this file
+from typing import Dict
+
+
 class AgenticFallback:
     """Handle cases where primary methods fail"""
     
