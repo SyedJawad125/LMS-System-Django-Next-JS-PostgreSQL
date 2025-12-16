@@ -58,10 +58,11 @@ class LoginSerializer(serializers.Serializer):
 
 
 class LoginUserSerializer(serializers.ModelSerializer):
+    role_name = serializers.CharField(source='role.name', read_only=True)
 
     class Meta:
         model = User
-        fields = ('id', 'first_name', 'last_name', 'full_name', 'username', 'email', 'mobile', 'profile_image', 'role', 'type')
+        fields = ('id', 'first_name', 'last_name', 'full_name', 'username', 'email', 'mobile', 'profile_image', 'role', 'role_name', 'type')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

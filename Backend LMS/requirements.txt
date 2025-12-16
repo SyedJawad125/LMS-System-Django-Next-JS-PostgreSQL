@@ -1,52 +1,15 @@
-# django==5.2.5
-# djangorestframework==3.16.1
-# djangorestframework_simplejwt==5.5.0
-# django-cors-headers==4.7.0
-# django-filter==25.1.0
-# cryptography==45.0.6
-# python-dotenv==1.1.1
-# psycopg2-binary==2.9.10
-# pillow==11.3.0
-# celery==5.5.3
-# pika==1.3.2
-# django-celery-results==2.6.0
-# amqp==5.3.1
-# pytz==2025.2
-# django-redis==6.0.0
-# python-dateutil==2.9.0
-# drf-spectacular
-# drf-spectacular-sidecar
-# gunicorn==23.0.0
-# django-ckeditor-5==0.2.18
+# ============================================
+# DJANGO LMS - MAIN REQUIREMENTS
+# ============================================
+# This file installs AFTER requirements-base.txt
+# Changes here won't trigger rebuild of heavy ML packages
 
-
-# # RAG & LLM
-# groq==0.9.0
-# langchain==0.2.16
-# langchain-groq==0.1.9
-# langchain-community==0.2.16
-# langchain-chroma==0.1.2
-
-# # Vector Store
-# chromadb==0.5.0
-# sentence-transformers==3.0.1
-
-# # PDF Processing
-# PyPDF2==3.0.1
-# python-docx==1.1.0
-
-# # Utilities
-# python-decouple==3.8
-
-
-
-
+# Include heavy ML dependencies first
+-r requirements-base.txt
 
 # ============================================
-# DJANGO LMS - REQUIREMENTS
+# CORE DJANGO
 # ============================================
-
-# Core Django
 django==5.2.5
 djangorestframework==3.16.1
 djangorestframework_simplejwt==5.5.0
@@ -55,127 +18,56 @@ django-filter==25.1.0
 cryptography==45.0.6
 python-dotenv==1.1.1
 
-# Database
+# ============================================
+# DATABASE
+# ============================================
 psycopg2-binary==2.9.10
 
-# Media & Assets
+# ============================================
+# MEDIA & ASSETS
+# ============================================
 pillow==11.3.0
 django-ckeditor-5==0.2.18
 
-# Task Queue
+# ============================================
+# TASK QUEUE
+# ============================================
 celery==5.5.3
 pika==1.3.2
 django-celery-results==2.6.0
 amqp==5.3.1
 
-# Utilities
+# ============================================
+# UTILITIES
+# ============================================
 pytz==2025.2
 django-redis==6.0.0
 python-dateutil==2.9.0
 python-decouple==3.8
 
-# API Documentation
+# ============================================
+# API DOCUMENTATION
+# ============================================
 drf-spectacular==0.27.2
 drf-spectacular-sidecar==2024.6.1
 
-# Production Server
+# ============================================
+# PRODUCTION SERVER
+# ============================================
 gunicorn==23.0.0
-
-# ============================================
-# RAG & LLM SYSTEM
-# ============================================
-
-# LLM Integration
-groq==0.9.0
-
-# LangChain Framework
-langchain==0.2.16
-langchain-groq==0.1.9
-langchain-community==0.2.16
-langchain-chroma==0.1.2
-
-# Vector Store
-chromadb==0.5.0
-sentence-transformers==3.0.1
-
-# Additional embeddings support
-# tiktoken==0.7.0  # Uncomment if needed for OpenAI tokenization
 
 # ============================================
 # DOCUMENT PROCESSING
 # ============================================
-
-# PDF Processing
 PyPDF2==3.0.1
-
-# Word Documents
 python-docx==1.1.0
 
-# Additional document formats (optional)
-# markdown==3.6  # Uncomment if you need markdown processing
-# openpyxl==3.1.2  # Uncomment if you need Excel file support
-
 # ============================================
-# DEPENDENCIES NOTES
+# INSTALLATION STRATEGY
 # ============================================
-
-# Compatible Versions:
-# - Python 3.10+ (recommended: 3.11)
-# - PostgreSQL 14+ (recommended: 15 or 16)
-# - Redis 6+ (for Celery & caching)
-
-# Vector Store Dependencies:
-# - chromadb requires: hnswlib, tokenizers, pydantic
-# - sentence-transformers requires: torch, transformers
-# These are installed automatically with the packages above
-
-# Installation Order:
-# 1. Install system dependencies (PostgreSQL, Redis)
-# 2. Create virtual environment: python -m venv venv
-# 3. Activate: source venv/bin/activate (Linux/Mac) or venv\Scripts\activate (Windows)
-# 4. Install requirements: pip install -r requirements.txt
-# 5. Run migrations: python manage.py migrate
-
-# Development Dependencies (add to requirements-dev.txt):
-# pytest==8.2.0
-# pytest-django==4.8.0
-# black==24.4.2
-# flake8==7.0.0
-# ipython==8.24.0
-
-# ============================================
-# TROUBLESHOOTING
-# ============================================
-
-# If you encounter issues:
-
-# 1. ChromaDB issues:
-#    pip install --upgrade chromadb
-#    pip install hnswlib --no-cache-dir
-
-# 2. Sentence-transformers issues:
-#    pip install torch --index-url https://download.pytorch.org/whl/cpu
-#    pip install sentence-transformers
-
-# 3. PyPDF2 issues:
-#    pip install --upgrade PyPDF2
-
-# 4. psycopg2 issues (especially on Mac M1/M2):
-#    brew install postgresql
-#    pip install psycopg2-binary --no-cache-dir
-
-# 5. Memory issues with embeddings:
-#    Use smaller model: "all-MiniLM-L6-v2" (current)
-#    Or use: "all-MiniLM-L12-v2" for better quality
-#    Avoid: "all-mpnet-base-v2" (requires more RAM)
-
-# ============================================
-# PRODUCTION OPTIMIZATIONS
-# ============================================
-
-# For production, consider:
-# 1. Use specific versions (no ~= or >=)
-# 2. Add: uwsgi==2.0.24 or gunicorn (already included)
-# 3. Add: sentry-sdk==2.0.0 for error tracking
-# 4. Add: whitenoise==6.6.0 for static files
-# 5. Use environment-specific requirements files
+# Docker builds in this order:
+# 1. requirements-base.txt (CACHED - only rebuild if ML packages change)
+# 2. requirements.txt (this file - rebuild when Django/API packages change)
+# 3. Application code (rebuild on every code change)
+#
+# Result: Most builds skip step 1, saving 50+ minutes!

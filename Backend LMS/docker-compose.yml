@@ -1,8 +1,20 @@
+# ============================================
+# OPTIMIZED DOCKER COMPOSE FOR DJANGO LMS + RAG
+# ============================================
+
+# Shared build configuration for caching
+x-build-config: &build-config
+  context: .
+  dockerfile: Dockerfile
+  cache_from:
+    - lms-backend:latest
+  args:
+    BUILDKIT_INLINE_CACHE: 1
 
 services:
   web:
-    build: .
-#    command: python manage.py runserver 0.0.0.0:8000
+    build: *build-config
+    image: lms-backend:latest  # Tag image for cache reuse
     command: gunicorn --bind 0.0.0.0:8000 config.wsgi:application
     entrypoint: ["/entrypoint.sh"]
     volumes:
@@ -13,9 +25,11 @@ services:
       - .env
     depends_on:
       - db
+      - rabbitmq
+    restart: unless-stopped
 
   db:
-    image: postgres:15
+    image: postgres:15-alpine  # Alpine is smaller
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -24,20 +38,31 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   rabbitmq:
-    image: rabbitmq:3-management
+    image: rabbitmq:3-management-alpine  # Alpine is smaller
     ports:
       - "5672:5672"   # broker port
       - "15672:15672" # management UI
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   worker:
-    build: .
+    image: lms-backend:latest  # Reuse built image - NO REBUILD!
     command: celery -A config worker -l info
-#    command: gunicorn --bind 0.0.0.0:8000 config.wsgi:application --workers=1 --threads=2 --timeout=120
     entrypoint: ["/entrypoint.sh"]
     volumes:
       - .:/app
@@ -45,15 +70,42 @@ services:
       - .env
     depends_on:
       - rabbitmq
+      - db
+    restart: unless-stopped
 
   adminer:
-    image: adminer
-    container_name: adminer
-    restart: always
+    image: adminer:latest
+    container_name: adminer-lms
+    restart: unless-stopped
     ports:
       - "8080:8080"
 
 volumes:
   postgres_data:
-#  pgadmin_data:
 
+# ============================================
+# USAGE INSTRUCTIONS
+# ============================================
+#
+# FIRST BUILD (will take 45-60 minutes):
+# DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker-compose build
+#
+# START SERVICES:
+# docker-compose up -d
+#
+# REBUILD AFTER CODE CHANGES (takes ~30 seconds):
+# docker-compose up -d --build
+#
+# REBUILD ONLY IF requirements.txt CHANGED (takes ~2-5 minutes):
+# docker-compose build web
+# docker-compose up -d
+#
+# FORCE FULL REBUILD (rare, only if requirements-base.txt changed):
+# docker-compose build --no-cache
+# docker-compose up -d
+#
+# VIEW LOGS:
+# docker-compose logs -f web
+# docker-compose logs -f worker
+#
+# ============================================
