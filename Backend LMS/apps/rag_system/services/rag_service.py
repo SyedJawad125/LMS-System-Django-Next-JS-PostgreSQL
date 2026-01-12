@@ -287,7 +287,7 @@ from .vectorstore_service import VectorStoreService
 from .database_connector import DatabaseConnector
 
 
-class EnhancedVectorStoreRAGService:
+class VectorStoreRAGService:
     """
     Production-Grade RAG Service with:
     - Reranking for better relevance
