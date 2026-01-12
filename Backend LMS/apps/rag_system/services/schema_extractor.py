@@ -1,3 +1,4 @@
+# apps/rag_system/services/schema_extractor.py
 """
 Automatic Schema Extractor - Generates schema documentation from PostgreSQL
 This runs ONCE to extract all table information automatically

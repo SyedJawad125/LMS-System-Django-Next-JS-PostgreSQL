@@ -1,4 +1,5 @@
-# NEW FILE: Create this file
+# agentic_fallback.py 
+# apps/rag_system/services/agentic_fallback.py
 from typing import Dict
 
 
