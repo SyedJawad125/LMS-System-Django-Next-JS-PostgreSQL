@@ -87,6 +87,9 @@ class User(AbstractBaseUser, TimeStamps):
     def get_short_name(self):
         """Return the short name for the user."""
         return self.first_name
+    class Meta:
+        # This tells PostgreSQL to use EXACTLY this name
+        db_table = 'user'
 
 class Role(TimeUserStamps):
     name = models.CharField(max_length=100, validators=[val_name])
@@ -100,6 +103,9 @@ class Role(TimeUserStamps):
     def save(self, *args, **kwargs):
         self.name = self.name.title()
         return super().save(*args, **kwargs)
+    class Meta:
+        # This tells PostgreSQL to use EXACTLY this name
+        db_table = 'roles'
 
 
 class Permission(models.Model):
@@ -111,22 +117,17 @@ class Permission(models.Model):
 
     def __str__(self):
         return self.name
-
+    
+    class Meta:
+        # This tells PostgreSQL to use EXACTLY this name
+        db_table = 'permissions'
 
 class UserToken(TimeStamps):
     user = models.ForeignKey('User', on_delete=models.PROTECT, related_name="user_token")
     device_token = models.TextField(max_length=512, null=True, blank=True)
-
-
-# class Employee(TimeUserStamps):
-#     status_choices = (
-#         (INVITED, INVITED),
-#         (ACTIVE, ACTIVE),
-#         (DEACTIVATED, DEACTIVATED),
-#     )
-#     user = models.OneToOneField('User', on_delete=models.SET_NULL, related_name="user_employee", null=True, blank=True)
-#     status = models.CharField(max_length=20, choices=status_choices, default=INVITED)
-
+    class Meta:
+        # This tells PostgreSQL to use EXACTLY this name
+        db_table = 'usertoken'
 
 
 class Employee(TimeUserStamps):
@@ -196,6 +197,8 @@ class Employee(TimeUserStamps):
         
         super().save(*args, **kwargs)
 
+    class Meta:
+        db_table = 'employees'
 
 class Student(TimeUserStamps):
     """Student Profile"""
@@ -236,22 +239,6 @@ class Student(TimeUserStamps):
     
     def __str__(self):
         return f"{self.admission_number} - {self.user.get_full_name() if self.user else 'No User'}"
-
-# class Teacher(TimeUserStamps):
-#     """Teacher Profile"""
-#     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='teacher_profile', null=True, blank=True)
-#     employee_id = models.CharField(max_length=50, unique=True)
-#     qualification = models.CharField(max_length=255)
-#     specialization = models.CharField(max_length=255, blank=True)
-#     experience_years = models.IntegerField(default=0)
-#     joining_date = models.DateField()
-#     designation = models.CharField(max_length=100)
-#     # department = models.ForeignKey('Department', on_delete=models.SET_NULL, null=True)
-#     salary = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-#     is_class_teacher = models.BooleanField(default=False)
-    
-#     class Meta:
-#         db_table = 'teachers'
 
 
 class Teacher(TimeUserStamps):

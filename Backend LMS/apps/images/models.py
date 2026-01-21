@@ -7,6 +7,10 @@ class Categories(TimeUserStamps):
     
     def __str__(self):
         return self.category
+    
+    class Meta:
+        db_table = 'categories'
+        
 
 class Images(TimeUserStamps):
     image = models.ImageField(upload_to='images/')
@@ -19,3 +23,15 @@ class Images(TimeUserStamps):
     
     def __str__(self):
         return self.name if self.name else f"Image {self.id}"
+    
+    class Meta:
+        # This tells PostgreSQL to use EXACTLY this name
+        db_table = 'images'
+    
+
+# class Item(models.Model):
+#     name = models.CharField(max_length=100)
+
+#     class Meta:
+#         # This tells PostgreSQL to use EXACTLY this name
+#         db_table = 'items'

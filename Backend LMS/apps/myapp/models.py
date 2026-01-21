@@ -8,7 +8,7 @@ from utils.reusable_classes import TimeUserStamps
 from django_ckeditor_5.fields import CKEditor5Field
 
 
-class Category(TimeUserStamps):
+class BlogCategory(TimeUserStamps):
     """Blog post categories with hierarchical structure"""
     name = models.CharField(max_length=100)
     slug = models.SlugField(max_length=100, blank=True)
@@ -21,8 +21,10 @@ class Category(TimeUserStamps):
     
 
     class Meta:
-        verbose_name_plural = "Categories"
+        db_table = 'blog_Categories'
+        verbose_name_plural = "blog_Categories"
         ordering = ['name']
+
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -50,6 +52,8 @@ class Tag(TimeUserStamps):
 
     def __str__(self):
         return self.name
+    class Meta:
+        db_table = 'tags'
 
 
 class BlogPost(TimeUserStamps):
@@ -100,6 +104,7 @@ class BlogPost(TimeUserStamps):
     is_premium = models.BooleanField(default=False)
 
     class Meta:
+        db_table = 'blogposts'
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['status', 'published_at']),
@@ -144,6 +149,7 @@ class Comment(TimeUserStamps):
     moderation_note = models.TextField(blank=True)
     
     class Meta:
+        db_table = 'comments'
         ordering = ['-created_at']
 
     def __str__(self):
@@ -177,6 +183,7 @@ class Media(TimeUserStamps):
     uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
     is_public = models.BooleanField(default=True)
     class Meta:
+        db_table = 'media'
         ordering = ['-created_at']
 
     def __str__(self):
@@ -203,7 +210,7 @@ class Newsletter(TimeUserStamps):
         ]
     frequency = models.CharField(max_length=20, choices=FREQUENCY_CHOICES, default=WEEKLY)
     # Categories they're interested in
-    interested_categories = models.ManyToManyField(Category, blank=True)
+    interested_categories = models.ManyToManyField(BlogCategory, blank=True)
     # Tracking
     subscription_source = models.CharField(max_length=100, blank=True, help_text="Where they subscribed from")
     # FIX: Add protocol parameter
@@ -214,7 +221,9 @@ class Newsletter(TimeUserStamps):
     def __str__(self):
         name = f"{self.first_name} {self.last_name}".strip() or "Anonymous"
         return f"{name} ({self.email})"
-
+    
+    class Meta:
+        db_table = 'news_letter'
 
 class Campaign(TimeUserStamps):
     """Email campaign management"""
@@ -237,7 +246,7 @@ class Campaign(TimeUserStamps):
     content = models.TextField()
     campaign_type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='newsletter')
     # Targeting
-    target_categories = models.ManyToManyField(Category, blank=True)
+    target_categories = models.ManyToManyField(BlogCategory, blank=True)
     target_all_subscribers = models.BooleanField(default=True)
     # Scheduling
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
@@ -253,7 +262,8 @@ class Campaign(TimeUserStamps):
     
     def __str__(self):
         return self.name
-
+    class Meta:
+        db_table = 'campaign'
 
 # class Analytics(models.Model):
 #     """Website analytics and tracking"""

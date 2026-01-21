@@ -12,5 +12,9 @@ class EmailTemplate(TimeStamps):
 
     def __str__(self):
         return self.name
+    
+    class Meta:
+        # This tells PostgreSQL to use EXACTLY this name
+        db_table = 'email_temp'
 
 
