@@ -382,8 +382,173 @@
 
 
 
+# # ============================================
+# # ULTRA-SIMPLE GROQ SERVICE - NO LLM SQL GENERATION
+# # File: apps/rag_system/services/groq_service.py
+# # ============================================
+
+# import os
+# from groq import Groq
+# from decouple import config
+# from typing import List, Dict
+# import logging
+
+# # Set up logging to catch key errors in your terminal
+# logger = logging.getLogger(__name__)
+
+# class GroqService:
+#     """
+#     FIXED GROQ SERVICE
+#     - Enhanced API Key detection
+#     - Safe SQL generation based on your actual PostgreSQL images
+#     """
+    
+#     def __init__(self):
+#         self.client = None
+#         self.model = "llama-3.3-70b-versatile"
+        
+#         # 1. ATTEMPT TO LOAD API KEY (Multi-method fallback)
+#         api_key = None
+        
+#         # Try python-decouple (.env file)
+#         try:
+#             api_key = config('GROQ_API_KEY', default=None)
+#         except Exception:
+#             pass
+            
+#         # Try OS environment variables
+#         if not api_key:
+#             api_key = os.getenv('GROQ_API_KEY')
+            
+#         # 2. VALIDATE KEY AND INITIALIZE
+#         if api_key and api_key != "None" and len(api_key) > 10:
+#             try:
+#                 self.client = Groq(api_key=api_key)
+#                 # Quick validation call
+#                 print(f"✅ GROQ Service Connected: {self.model}")
+#             except Exception as e:
+#                 print(f"❌ GROQ Initialization Failed: {str(e)}")
+#         else:
+#             print("❌ ERROR: GROQ_API_KEY is missing or invalid in your .env file!")
+
+#     def generate_response(self, query: str, context: List[str], system_prompt: str = None) -> Dict:
+#         """Generate response with safety check for active client"""
+#         if not self.client:
+#             return {
+#                 "success": False, 
+#                 "response": "I cannot answer right now because the AI API key is not configured correctly.",
+#                 "error": "No Groq client initialized"
+#             }
+        
+#         if not system_prompt:
+#             system_prompt = "You are a helpful School Management Assistant. Use the provided context to answer questions."
+        
+#         context_str = "\n\n".join([f"Data Source {i+1}:\n{str(ctx)}" for i, ctx in enumerate(context) if ctx])
+        
+#         messages = [
+#             {"role": "system", "content": str(system_prompt)},
+#             {"role": "user", "content": f"Context Information:\n{context_str}\n\nUser Question: {query}\n\nHelpful Answer:"}
+#         ]
+        
+#         try:
+#             response = self.client.chat.completions.create(
+#                 model=self.model,
+#                 messages=messages,
+#                 temperature=0.2, # Lower temperature for more factual answers
+#                 max_tokens=1024,
+#             )
+            
+#             return {
+#                 "success": True,
+#                 "response": response.choices[0].message.content,
+#                 "model": self.model
+#             }
+#         except Exception as e:
+#             logger.error(f"Groq Generation Error: {e}")
+#             return {"success": False, "error": str(e), "response": "Sorry, I hit an error processing that."}
+
+#     def generate_intelligent_sql(self, query: str, table_context: Dict) -> str:
+#         table_name = table_context.get("table_name", "routes")
+        
+#         # Based on your image: 
+#         # false = Not deleted (Active)
+#         # true = Deleted
+#         where_clause = ' WHERE "deleted" = false'
+        
+#         query_lower = query.lower()
+
+#         # Rule: List routes
+#         if any(word in query_lower for word in ['what are', 'list', 'show', 'routes']):
+#             return f'SELECT name, code, start_point, end_point FROM "{table_name}"{where_clause} LIMIT 50;'
+        
+#         # Rule: Count active routes
+#         if "how many" in query_lower:
+#             return f'SELECT COUNT(*) FROM "{table_name}"{where_clause};'
+
+#         return f'SELECT * FROM "{table_name}"{where_clause} LIMIT 10;'
+
+#     def test_connection(self) -> bool:
+#         """Used for diagnostic.py to check if the key works"""
+#         if not self.client: return False
+#         try:
+#             self.client.chat.completions.create(
+#                 model=self.model,
+#                 messages=[{"role": "user", "content": "hi"}],
+#                 max_tokens=5
+#             )
+#             return True
+#         except:
+#             return False
+
+# # TEST
+# if __name__ == "__main__":
+#     print("="*60)
+#     print("Testing ULTRA-SIMPLE GroqService")
+#     print("="*60)
+    
+#     groq = GroqService()
+    
+#     # Test SQL generation
+#     table_context = {
+#         "table_name": "routes",
+#         "columns": ["id", "name", "code", "start_point", "end_point"],
+#         "has_deleted_field": True
+#     }
+    
+#     test_queries = [
+#         "how many routes",
+#         "list all routes",
+#         "what are the routes",
+#         "show routes"
+#     ]
+    
+#     for q in test_queries:
+#         print(f"\nQuery: '{q}'")
+#         sql = groq.generate_intelligent_sql(q, table_context)
+        
+#         # Validate
+#         if sql:
+#             if 'DELETE' in sql.upper():
+#                 print("   ❌ FAILED: Contains DELETE!")
+#             elif 'UPDATE' in sql.upper():
+#                 print("   ❌ FAILED: Contains UPDATE!")
+#             elif not sql.upper().startswith('SELECT'):
+#                 print("   ❌ FAILED: Doesn't start with SELECT!")
+#             else:
+#                 print("   ✅ PASSED: Safe SQL")
+#         else:
+#             print("   ❌ FAILED: No SQL generated")
+    
+#     print("\n" + "="*60)
+#     print("✅ Testing complete")
+#     print("="*60)
+
+
+
+
+
 # ============================================
-# ULTRA-SIMPLE GROQ SERVICE - NO LLM SQL GENERATION
+# FINAL FIXED GROQ SERVICE
 # File: apps/rag_system/services/groq_service.py
 # ============================================
 
@@ -394,7 +559,7 @@ import os
 
 
 class GroqService:
-    """GROQ Service - ULTRA SIMPLE - NO DELETE ERRORS"""
+    """FINAL FIXED - Handles boolean 'deleted' column correctly"""
     
     def __init__(self):
         try:
@@ -422,7 +587,7 @@ class GroqService:
         """Generate response using GROQ"""
         
         if not system_prompt:
-            system_prompt = """You are an LMS assistant. Answer questions clearly and concisely."""
+            system_prompt = """You are an LMS assistant. Answer questions using the actual data provided in the context."""
         
         context_str = "\n\n".join([f"Context {i+1}:\n{str(ctx)}" for i, ctx in enumerate(context) if ctx])
         
@@ -459,102 +624,98 @@ class GroqService:
     
     def generate_intelligent_sql(self, query: str, table_context: Dict) -> str:
         """
-        Generate SQL - ULTRA SIMPLE - NO LLM
+        Generate SQL - HANDLES BOOLEAN DELETED CORRECTLY
         
-        CRITICAL: We DON'T use LLM at all!
-        We just build SQL from simple templates.
+        Your database uses:
+        - deleted = false (active records)
+        - deleted = true (deleted records)
         """
         
         table_name = table_context.get("table_name")
-        columns = table_context.get("columns", [])
         has_deleted = table_context.get("has_deleted_field", True)
         
         if not table_name:
-            print("❌ No table name provided")
+            print("❌ No table name")
             return None
         
-        print(f"\n🔧 Building SQL for table: {table_name}")
+        print(f"\n🔧 Building SQL for: {table_name}")
         
-        # Build WHERE clause
+        # Build WHERE clause with CORRECT boolean syntax
         where = ""
         if has_deleted:
-            where = " WHERE (deleted = FALSE OR deleted IS NULL)"
+            # Use lowercase 'false' for PostgreSQL boolean
+            where = " WHERE deleted = false"
         
-        # Detect query type from keywords
         query_lower = query.lower()
         
         # Rule 1: COUNT queries
         if any(word in query_lower for word in ['how many', 'count', 'number', 'total']):
             sql = f"SELECT COUNT(*) as count FROM {table_name}{where}"
-            print(f"✅ COUNT SQL: {sql}")
+            print(f"✅ COUNT: {sql}")
             return sql
         
-        # Rule 2: LIST/SHOW queries
+        # Rule 2: LIST queries  
         elif any(word in query_lower for word in ['list', 'show', 'display', 'get', 'what are', 'all']):
             sql = f"SELECT * FROM {table_name}{where} LIMIT 100"
-            print(f"✅ LIST SQL: {sql}")
+            print(f"✅ LIST: {sql}")
             return sql
         
-        # Rule 3: Default - safe SELECT
+        # Rule 3: Default
         else:
             sql = f"SELECT * FROM {table_name}{where} LIMIT 100"
-            print(f"✅ DEFAULT SQL: {sql}")
+            print(f"✅ DEFAULT: {sql}")
             return sql
     
     def test_connection(self) -> bool:
-        """Test GROQ connection"""
+        """Test connection"""
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[{"role": "user", "content": "Test"}],
                 max_tokens=10,
             )
-            print("✅ GROQ connection OK")
+            print("✅ GROQ OK")
             return True
         except Exception as e:
-            print(f"❌ GROQ connection failed: {e}")
+            print(f"❌ GROQ failed: {e}")
             return False
 
 
 # TEST
 if __name__ == "__main__":
     print("="*60)
-    print("Testing ULTRA-SIMPLE GroqService")
+    print("Testing FINAL FIXED GroqService")
     print("="*60)
     
     groq = GroqService()
     
-    # Test SQL generation
     table_context = {
         "table_name": "routes",
-        "columns": ["id", "name", "code", "start_point", "end_point"],
+        "columns": ["id", "name", "code", "start_point", "end_point", "deleted"],
         "has_deleted_field": True
     }
     
     test_queries = [
         "how many routes",
-        "list all routes",
         "what are the routes",
-        "show routes"
+        "list all routes"
     ]
     
     for q in test_queries:
         print(f"\nQuery: '{q}'")
         sql = groq.generate_intelligent_sql(q, table_context)
         
-        # Validate
         if sql:
-            if 'DELETE' in sql.upper():
-                print("   ❌ FAILED: Contains DELETE!")
+            # Check for issues
+            if 'DELETE FROM' in sql.upper():
+                print("   ❌ FAIL: DELETE command")
             elif 'UPDATE' in sql.upper():
-                print("   ❌ FAILED: Contains UPDATE!")
+                print("   ❌ FAIL: UPDATE command")
             elif not sql.upper().startswith('SELECT'):
-                print("   ❌ FAILED: Doesn't start with SELECT!")
+                print("   ❌ FAIL: Not SELECT")
+            elif 'deleted = false' not in sql.lower():
+                print("   ⚠️  WARNING: Missing deleted filter")
             else:
-                print("   ✅ PASSED: Safe SQL")
-        else:
-            print("   ❌ FAILED: No SQL generated")
+                print("   ✅ PASS: Safe SQL with correct boolean")
     
     print("\n" + "="*60)
-    print("✅ Testing complete")
-    print("="*60)

@@ -1,5 +1,6 @@
 # # ============================================
-# # ENHANCED DATABASE CONNECTOR
+# # COMPLETELY FIXED DATABASE CONNECTOR
+# # MATCHES YOUR ACTUAL POSTGRESQL TABLES
 # # File: apps/rag_system/services/database_connector.py
 # # ============================================
 
@@ -9,7 +10,7 @@
 
 
 # class DatabaseConnector:
-#     """Enhanced connector for mixed table naming with PostgreSQL"""
+#     """Fixed connector with YOUR ACTUAL PostgreSQL table names"""
     
 #     def __init__(self):
 #         self.connection = connection
@@ -34,14 +35,7 @@
     
 #     def get_actual_table_name(self, entity_type: str, query: str = "") -> Optional[str]:
 #         """
-#         Get the ACTUAL table name for an entity, handling mixed naming
-        
-#         Args:
-#             entity_type: 'user', 'student', 'teacher', etc.
-#             query: Original query for context
-            
-#         Returns:
-#             Actual table name or None
+#         Get the ACTUAL table name - FIXED FOR YOUR DATABASE
 #         """
 #         if self._table_mapping is None:
 #             self._build_table_mapping()
@@ -49,102 +43,107 @@
 #         entity_lower = entity_type.lower()
 #         all_tables = self.get_all_tables()
         
-#         # Direct mapping based on your actual tables
+#         # ============================================================
+#         # CORRECTED FOR YOUR ACTUAL POSTGRESQL TABLES
+#         # Based on images: students, teachers, user, classes, etc.
+#         # ============================================================
 #         direct_map = {
-#             # User-related
-#             'user': ['users_user', 'auth_user'],
-#             'users': ['users_user', 'auth_user'],
+#             # Student tables
+#             'student': ['students'],
+#             'students': ['students'],
             
-#             # Student-related
-#             'student': ['students', 'student_behavior', 'student_discounts'],
-#             'students': ['students', 'student_behavior', 'student_discounts'],
+#             # Teacher tables
+#             'teacher': ['teachers'],
+#             'teachers': ['teachers'],
             
-#             # Teacher-related
-#             'teacher': ['teachers', 'teachers_teacher'],
-#             'teachers': ['teachers', 'teachers_teacher'],
+#             # User tables (singular: 'user' not 'users_user')
+#             'user': ['user'],
+#             'users': ['user'],
             
-#             # Role-related
-#             'role': ['users_role', 'users_role_permissions', 'auth_group'],
-#             'roles': ['users_role', 'users_role_permissions', 'auth_group'],
+#             # Parent tables
+#             'parent': ['parents'],
+#             'parents': ['parents'],
             
-#             # Parent-related
-#             'parent': ['parents', 'parents_students'],
-#             'parents': ['parents', 'parents_students'],
+#             # Class tables
+#             'class': ['classes'],
+#             'classes': ['classes'],
             
-#             # Class-related
-#             'class': ['classes', 'class_subjects'],
-#             'classes': ['classes', 'class_subjects'],
+#             # Subject tables
+#             'subject': ['subjects'],
+#             'subjects': ['subjects'],
             
-#             # Subject-related
-#             'subject': ['subjects', 'class_subjects'],
-#             'subjects': ['subjects', 'class_subjects'],
+#             # Exam tables
+#             'exam': ['exams'],
+#             'exams': ['exams'],
             
-#             # Vehicle-related
+#             # Fee tables
+#             'fee': ['fee_invoices'],
+#             'fees': ['fee_invoices'],
+#             'invoice': ['fee_invoices'],
+#             'invoices': ['fee_invoices'],
+            
+#             # Attendance tables
+#             'attendance': ['daily_attendance'],
+            
+#             # Assignment tables
+#             'assignment': ['assignments'],
+#             'assignments': ['assignments'],
+            
+#             # Leave tables
+#             'leave': ['leave_applications'],
+#             'leaves': ['leave_applications'],
+            
+#             # Vehicle tables
 #             'vehicle': ['vehicles'],
 #             'vehicles': ['vehicles'],
             
-#             # Route-related
+#             # Route tables
 #             'route': ['routes'],
 #             'routes': ['routes'],
             
-#             # Exam-related
-#             'exam': ['exams', 'exam_results', 'exam_schedules', 'exam_types'],
-#             'exams': ['exams', 'exam_results', 'exam_schedules', 'exam_types'],
+#             # Certificate tables
+#             'certificate': ['certificates'],
+#             'certificates': ['certificates'],
             
-#             # Fee-related
-#             'fee': ['fee_invoices', 'fee_payments', 'fee_structures', 'fee_types'],
-#             'fees': ['fee_invoices', 'fee_payments', 'fee_structures', 'fee_types'],
+#             # Course tables
+#             'course': ['courses'],
+#             'courses': ['courses'],
             
-#             # Attendance-related
-#             'attendance': ['daily_attendance', 'attendance_summary', 'attendance_configuration'],
+#             # Quiz tables
+#             'quiz': ['quizzes'],
+#             'quizzes': ['quizzes'],
             
-#             # Book/Library-related
-#             'book': ['images_images', 'images_categories'],
-#             'books': ['images_images', 'images_categories'],
-            
-#             # Employee-related
-#             'employee': ['users_employee'],
-#             'employees': ['users_employee'],
-            
-#             # Permission-related
-#             'permission': ['users_permission', 'auth_permission'],
-#             'permissions': ['users_permission', 'auth_permission'],
-            
-#             # Assignment-related
-#             'assignment': ['assignments', 'assignment_submissions'],
-#             'assignments': ['assignments', 'assignment_submissions'],
-            
-#             # Leave-related
-#             'leave': ['leave_applications', 'leave_balances', 'leave_types'],
-#             'leaves': ['leave_applications', 'leave_balances', 'leave_types'],
-            
-#             # Message-related
-#             'message': ['messages'],
-#             'messages': ['messages'],
-            
-#             # Notification-related
-#             'notification': ['notifications'],
-#             'notifications': ['notifications'],
-            
-#             # Department-related
+#             # Department tables
 #             'department': ['departments'],
 #             'departments': ['departments'],
             
-#             # Course-related
-#             'course': ['courses', 'course_enrollments'],
-#             'courses': ['courses', 'course_enrollments'],
+#             # Message tables (note: 'lnessages' in your DB based on image)
+#             'message': ['lnessages', 'messages'],
+#             'messages': ['lnessages', 'messages'],
             
-#             # Quiz-related
-#             'quiz': ['quizzes', 'quiz_answers', 'quiz_attempts'],
-#             'quizzes': ['quizzes', 'quiz_answers', 'quiz_attempts'],
+#             # Notification tables
+#             'notification': ['notifications'],
+#             'notifications': ['notifications'],
             
-#             # Timetable-related
-#             'timetable': ['timetables', 'time_slots'],
-#             'timetables': ['timetables', 'time_slots'],
+#             # Employee tables
+#             'employee': ['employees'],
+#             'employees': ['employees'],
             
-#             # Certificate-related
-#             'certificate': ['certificates', 'certificate_templates'],
-#             'certificates': ['certificates', 'certificate_templates'],
+#             # Role tables
+#             'role': ['roles'],
+#             'roles': ['roles'],
+            
+#             # Section tables
+#             'section': ['sections'],
+#             'sections': ['sections'],
+            
+#             # Event tables
+#             'event': ['events'],
+#             'events': ['events'],
+            
+#             # Permission tables
+#             'permission': ['permissions'],
+#             'permissions': ['permissions'],
 #         }
         
 #         # Try direct mapping first
@@ -154,7 +153,7 @@
 #             # Find which table actually exists
 #             for table in possible_tables:
 #                 if table in all_tables:
-#                     print(f"✅ Direct map: '{entity_lower}' → '{table}'")
+#                     print(f"✅ Mapped '{entity_lower}' → '{table}'")
 #                     return table
         
 #         # If not found, try pattern matching
@@ -164,17 +163,10 @@
 #         """Build mapping of entities to actual tables"""
 #         all_tables = self.get_all_tables()
 #         print(f"📊 Found {len(all_tables)} tables in PostgreSQL")
-        
-#         # Log tables for debugging
-#         print("📋 Available tables (sample):")
-#         for i, table in enumerate(all_tables[:30]):
-#             print(f"  {i+1}. {table}")
-        
 #         self._table_mapping = all_tables
     
 #     def _find_table_by_pattern(self, entity: str, query: str, all_tables: List[str]) -> Optional[str]:
 #         """Find table by searching patterns"""
-#         query_lower = query.lower()
         
 #         # Strategy 1: Exact match
 #         if entity in all_tables:
@@ -198,19 +190,13 @@
 #                 matching.append(table)
         
 #         if matching:
-#             # Filter out junction/mapping tables
+#             matching.sort(key=len)
 #             main_tables = [t for t in matching if not self._is_junction_table(t)]
 #             if main_tables:
 #                 return main_tables[0]
 #             return matching[0]
         
-#         # Strategy 4: Common prefixes
-#         prefixes = ['users_', 'auth_', 'django_', 'rag_']
-#         for prefix in prefixes:
-#             table_name = prefix + entity
-#             if table_name in all_tables:
-#                 return table_name
-        
+#         print(f"⚠️ WARNING: Could not find table for entity '{entity}'")
 #         return None
     
 #     def _is_junction_table(self, table_name: str) -> bool:
@@ -218,8 +204,9 @@
 #         table_lower = table_name.lower()
         
 #         junction_indicators = [
-#             '_permissions', '_groups_', 'permission', 'token',
-#             'blacklist', 'log', 'migration', 'session', 'admin'
+#             '_permissions', '_groups', 'permission', 'token',
+#             'blacklist', '_log', 'migration', 'session', 'admin',
+#             '_workflow', '_emailtemplate', '_target_', 'django_'
 #         ]
         
 #         return any(indicator in table_lower for indicator in junction_indicators)
@@ -257,7 +244,14 @@
             
 #             # Get row count
 #             with self.connection.cursor() as cursor:
-#                 cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+#                 # Check if table has 'deleted' column
+#                 has_deleted = 'deleted' in column_names
+                
+#                 if has_deleted:
+#                     cursor.execute(f"SELECT COUNT(*) FROM {table_name} WHERE (deleted = FALSE OR deleted IS NULL)")
+#                 else:
+#                     cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+                    
 #                 row_count = cursor.fetchone()[0]
             
 #             return {
@@ -265,7 +259,8 @@
 #                 "columns": column_names,
 #                 "column_details": columns,
 #                 "row_count": row_count,
-#                 "entity_type": self._guess_entity_type(table_name, column_names)
+#                 "entity_type": self._guess_entity_type(table_name, column_names),
+#                 "has_deleted_field": has_deleted
 #             }
 #         except Exception as e:
 #             print(f"⚠️ Error getting schema for {table_name}: {e}")
@@ -276,28 +271,33 @@
 #             }
     
 #     def _guess_entity_type(self, table_name: str, columns: List[str]) -> str:
-#         """Guess entity type from table name and columns"""
+#         """Guess entity type from table name"""
 #         table_lower = table_name.lower()
         
 #         entity_patterns = {
-#             "user": ["user", "account"],
-#             "student": ["student", "pupil"],
-#             "teacher": ["teacher", "instructor"],
-#             "role": ["role", "permission"],
-#             "class": ["class", "grade", "section"],
-#             "subject": ["subject", "course"],
-#             "exam": ["exam", "test", "result"],
-#             "fee": ["fee", "payment", "invoice"],
+#             "student": ["student"],
+#             "teacher": ["teacher"],
+#             "user": ["user"],
+#             "parent": ["parent"],
+#             "role": ["role"],
+#             "class": ["class"],
+#             "subject": ["subject"],
+#             "exam": ["exam"],
+#             "fee": ["fee", "invoice", "payment"],
 #             "attendance": ["attendance"],
-#             "vehicle": ["vehicle", "transport"],
+#             "vehicle": ["vehicle"],
 #             "route": ["route"],
-#             "parent": ["parent", "guardian"],
-#             "employee": ["employee", "staff"],
+#             "employee": ["employee"],
 #             "assignment": ["assignment"],
 #             "leave": ["leave"],
 #             "department": ["department"],
 #             "quiz": ["quiz"],
-#             "certificate": ["certificate"]
+#             "certificate": ["certificate"],
+#             "course": ["course"],
+#             "section": ["section"],
+#             "event": ["event"],
+#             "message": ["message", "lnessage"],  # Note: lnessages in your DB
+#             "notification": ["notification"]
 #         }
         
 #         for entity, keywords in entity_patterns.items():
@@ -308,23 +308,38 @@
 #         return "unknown"
     
 #     def execute_query(self, sql: str, params: tuple = None) -> List[Dict]:
-#         """Execute SQL query and return results as list of dicts"""
+#         """Execute SQL query with SMART safety check"""
 #         try:
+#             # --- START SMART SAFETY CHECK ---
+#             sql_upper = sql.upper()
+            
+#             # This regex \b ensures we only block the standalone word 'DELETE'
+#             # It will NOT block 'deleted', '"deleted"', or 'is_deleted'
+#             import re
+#             if re.search(r'\bDELETE\b', sql_upper):
+#                 print(f"🛑 Security Block: Standalone DELETE command detected!")
+#                 # We return an empty list so the system doesn't crash but knows it was blocked
+#                 return [] 
+#             # --- END SMART SAFETY CHECK ---
+
 #             with self.connection.cursor() as cursor:
 #                 cursor.execute(sql, params)
                 
-#                 # Get column names
+#                 # If no description, it was likely an illegal write operation
+#                 if not cursor.description:
+#                     return []
+
 #                 columns = [col[0] for col in cursor.description]
-                
-#                 # Fetch results
 #                 results = []
 #                 for row in cursor.fetchall():
-#                     results.append(dict(zip(columns, row)))
+#                     row_dict = {}
+#                     for col_name, value in zip(columns, row):
+#                         row_dict[col_name] = value if value is not None else None
+#                     results.append(row_dict)
                 
 #                 return results
 #         except Exception as e:
 #             print(f"❌ Query execution error: {e}")
-#             print(f"   SQL: {sql}")
 #             return []
     
 #     def get_schema_info(self) -> Dict:
@@ -332,11 +347,15 @@
 #         all_tables = self.get_all_tables()
 #         schema = {}
         
-#         for table in all_tables:
-#             # Skip system tables
-#             if any(skip in table.lower() for skip in ['django_', 'auth_permission', 'token_blacklist']):
-#                 continue
-            
+#         # Filter out system tables
+#         user_tables = [t for t in all_tables if not any(
+#             skip in t.lower() for skip in [
+#                 'django_', 'auth_permission', 'auth_group_permissions',
+#                 'token_blacklist', 'celery'
+#             ]
+#         )]
+        
+#         for table in user_tables:
 #             schema[table] = self.get_table_schema_info(table)
         
 #         return schema
@@ -348,12 +367,12 @@
         
 #         # Map keywords to entity types
 #         keyword_map = {
-#             'user': ['user', 'account', 'profile', 'auth'],
+#             'user': ['user', 'account', 'profile'],
 #             'student': ['student', 'pupil', 'learner'],
-#             'teacher': ['teacher', 'instructor', 'faculty', 'staff'],
+#             'teacher': ['teacher', 'instructor', 'faculty'],
 #             'parent': ['parent', 'guardian'],
 #             'class': ['class', 'grade', 'section'],
-#             'subject': ['subject', 'course', 'discipline'],
+#             'subject': ['subject', 'course'],
 #             'exam': ['exam', 'test', 'assessment', 'result'],
 #             'fee': ['fee', 'payment', 'invoice', 'billing'],
 #             'attendance': ['attendance', 'present', 'absent'],
@@ -363,10 +382,10 @@
 #             'leave': ['leave', 'absence', 'vacation'],
 #             'employee': ['employee', 'staff', 'worker'],
 #             'department': ['department', 'division'],
-#             'quiz': ['quiz', 'test', 'question'],
+#             'quiz': ['quiz', 'question'],
 #             'certificate': ['certificate', 'credential'],
-#             'timetable': ['timetable', 'schedule', 'time_slot'],
 #             'message': ['message', 'notification', 'announcement'],
+#             'event': ['event', 'activity'],
 #         }
         
 #         relevant_tables = []
@@ -394,18 +413,16 @@
 
 
 # ============================================
-# COMPLETELY FIXED DATABASE CONNECTOR
-# MATCHES YOUR ACTUAL POSTGRESQL TABLES
+# FINAL FIXED DATABASE CONNECTOR  
 # File: apps/rag_system/services/database_connector.py
 # ============================================
 
 from django.db import connection
 from typing import List, Dict, Optional
-import re
 
 
 class DatabaseConnector:
-    """Fixed connector with YOUR ACTUAL PostgreSQL table names"""
+    """Fixed connector - won't block 'deleted' column"""
     
     def __init__(self):
         self.connection = connection
@@ -429,145 +446,60 @@ class DatabaseConnector:
             return self._all_tables_cache
     
     def get_actual_table_name(self, entity_type: str, query: str = "") -> Optional[str]:
-        """
-        Get the ACTUAL table name - FIXED FOR YOUR DATABASE
-        """
+        """Get actual table name for entity"""
         if self._table_mapping is None:
             self._build_table_mapping()
         
         entity_lower = entity_type.lower()
         all_tables = self.get_all_tables()
         
-        # ============================================================
-        # CORRECTED FOR YOUR ACTUAL POSTGRESQL TABLES
-        # Based on images: students, teachers, user, classes, etc.
-        # ============================================================
+        # Mappings based on YOUR actual PostgreSQL tables
         direct_map = {
-            # Student tables
-            'student': ['students'],
-            'students': ['students'],
-            
-            # Teacher tables
-            'teacher': ['teachers'],
-            'teachers': ['teachers'],
-            
-            # User tables (singular: 'user' not 'users_user')
-            'user': ['user'],
-            'users': ['user'],
-            
-            # Parent tables
-            'parent': ['parents'],
-            'parents': ['parents'],
-            
-            # Class tables
-            'class': ['classes'],
-            'classes': ['classes'],
-            
-            # Subject tables
-            'subject': ['subjects'],
-            'subjects': ['subjects'],
-            
-            # Exam tables
-            'exam': ['exams'],
-            'exams': ['exams'],
-            
-            # Fee tables
-            'fee': ['fee_invoices'],
-            'fees': ['fee_invoices'],
-            'invoice': ['fee_invoices'],
-            'invoices': ['fee_invoices'],
-            
-            # Attendance tables
+            'student': ['students'], 'students': ['students'],
+            'teacher': ['teachers'], 'teachers': ['teachers'],
+            'user': ['user'], 'users': ['user'],
+            'parent': ['parents'], 'parents': ['parents'],
+            'class': ['classes'], 'classes': ['classes'],
+            'subject': ['subjects'], 'subjects': ['subjects'],
+            'exam': ['exams'], 'exams': ['exams'],
+            'fee': ['fee_invoices'], 'fees': ['fee_invoices'],
             'attendance': ['daily_attendance'],
-            
-            # Assignment tables
-            'assignment': ['assignments'],
-            'assignments': ['assignments'],
-            
-            # Leave tables
-            'leave': ['leave_applications'],
-            'leaves': ['leave_applications'],
-            
-            # Vehicle tables
-            'vehicle': ['vehicles'],
-            'vehicles': ['vehicles'],
-            
-            # Route tables
-            'route': ['routes'],
-            'routes': ['routes'],
-            
-            # Certificate tables
-            'certificate': ['certificates'],
-            'certificates': ['certificates'],
-            
-            # Course tables
-            'course': ['courses'],
-            'courses': ['courses'],
-            
-            # Quiz tables
-            'quiz': ['quizzes'],
-            'quizzes': ['quizzes'],
-            
-            # Department tables
-            'department': ['departments'],
-            'departments': ['departments'],
-            
-            # Message tables (note: 'lnessages' in your DB based on image)
-            'message': ['lnessages', 'messages'],
-            'messages': ['lnessages', 'messages'],
-            
-            # Notification tables
-            'notification': ['notifications'],
-            'notifications': ['notifications'],
-            
-            # Employee tables
-            'employee': ['employees'],
-            'employees': ['employees'],
-            
-            # Role tables
-            'role': ['roles'],
-            'roles': ['roles'],
-            
-            # Section tables
-            'section': ['sections'],
-            'sections': ['sections'],
-            
-            # Event tables
-            'event': ['events'],
-            'events': ['events'],
-            
-            # Permission tables
-            'permission': ['permissions'],
-            'permissions': ['permissions'],
+            'assignment': ['assignments'], 'assignments': ['assignments'],
+            'leave': ['leave_applications'], 'leaves': ['leave_applications'],
+            'vehicle': ['vehicles'], 'vehicles': ['vehicles'],
+            'route': ['routes'], 'routes': ['routes'],
+            'certificate': ['certificates'], 'certificates': ['certificates'],
+            'course': ['courses'], 'courses': ['courses'],
+            'quiz': ['quizzes'], 'quizzes': ['quizzes'],
+            'department': ['departments'], 'departments': ['departments'],
+            'message': ['lnessages', 'messages'], 'messages': ['lnessages', 'messages'],
+            'notification': ['notifications'], 'notifications': ['notifications'],
+            'employee': ['employees'], 'employees': ['employees'],
+            'role': ['roles'], 'roles': ['roles'],
+            'section': ['sections'], 'sections': ['sections'],
+            'event': ['events'], 'events': ['events'],
+            'permission': ['permissions'], 'permissions': ['permissions'],
         }
         
-        # Try direct mapping first
         if entity_lower in direct_map:
-            possible_tables = direct_map[entity_lower]
-            
-            # Find which table actually exists
-            for table in possible_tables:
+            for table in direct_map[entity_lower]:
                 if table in all_tables:
                     print(f"✅ Mapped '{entity_lower}' → '{table}'")
                     return table
         
-        # If not found, try pattern matching
         return self._find_table_by_pattern(entity_lower, query, all_tables)
     
     def _build_table_mapping(self):
-        """Build mapping of entities to actual tables"""
+        """Build table mapping"""
         all_tables = self.get_all_tables()
-        print(f"📊 Found {len(all_tables)} tables in PostgreSQL")
+        print(f"📊 Found {len(all_tables)} tables")
         self._table_mapping = all_tables
     
     def _find_table_by_pattern(self, entity: str, query: str, all_tables: List[str]) -> Optional[str]:
-        """Find table by searching patterns"""
-        
-        # Strategy 1: Exact match
+        """Find table by pattern"""
         if entity in all_tables:
             return entity
         
-        # Strategy 2: Plural/singular variations
         if entity.endswith('s'):
             singular = entity[:-1]
             if singular in all_tables:
@@ -577,44 +509,24 @@ class DatabaseConnector:
             if plural in all_tables:
                 return plural
         
-        # Strategy 3: Contains entity name
-        matching = []
-        for table in all_tables:
-            table_lower = table.lower()
-            if entity in table_lower:
-                matching.append(table)
-        
+        matching = [t for t in all_tables if entity in t.lower()]
         if matching:
             matching.sort(key=len)
-            main_tables = [t for t in matching if not self._is_junction_table(t)]
-            if main_tables:
-                return main_tables[0]
-            return matching[0]
+            main = [t for t in matching if not self._is_junction_table(t)]
+            return main[0] if main else matching[0]
         
-        print(f"⚠️ WARNING: Could not find table for entity '{entity}'")
         return None
     
     def _is_junction_table(self, table_name: str) -> bool:
-        """Check if table is a junction/mapping table"""
-        table_lower = table_name.lower()
-        
-        junction_indicators = [
-            '_permissions', '_groups', 'permission', 'token',
-            'blacklist', '_log', 'migration', 'session', 'admin',
-            '_workflow', '_emailtemplate', '_target_', 'django_'
-        ]
-        
-        return any(indicator in table_lower for indicator in junction_indicators)
+        """Check if junction table"""
+        indicators = ['_permissions', '_groups', 'token', 'blacklist', 'django_', 'migration']
+        return any(ind in table_name.lower() for ind in indicators)
     
     def get_table_columns(self, table_name: str) -> List[Dict]:
-        """Get columns for a table"""
+        """Get columns for table"""
         with self.connection.cursor() as cursor:
             cursor.execute("""
-                SELECT 
-                    column_name, 
-                    data_type, 
-                    is_nullable,
-                    column_default
+                SELECT column_name, data_type, is_nullable, column_default
                 FROM information_schema.columns 
                 WHERE table_name = %s
                 ORDER BY ordinal_position;
@@ -628,22 +540,19 @@ class DatabaseConnector:
                     "nullable": row[2] == 'YES',
                     "default": row[3]
                 })
-            
             return columns
     
     def get_table_schema_info(self, table_name: str) -> Dict:
-        """Get comprehensive schema information"""
+        """Get schema info"""
         try:
             columns = self.get_table_columns(table_name)
             column_names = [col["name"] for col in columns]
             
-            # Get row count
             with self.connection.cursor() as cursor:
-                # Check if table has 'deleted' column
                 has_deleted = 'deleted' in column_names
                 
                 if has_deleted:
-                    cursor.execute(f"SELECT COUNT(*) FROM {table_name} WHERE (deleted = FALSE OR deleted IS NULL)")
+                    cursor.execute(f"SELECT COUNT(*) FROM {table_name} WHERE deleted = false")
                 else:
                     cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
                     
@@ -654,148 +563,90 @@ class DatabaseConnector:
                 "columns": column_names,
                 "column_details": columns,
                 "row_count": row_count,
-                "entity_type": self._guess_entity_type(table_name, column_names),
+                "entity_type": self._guess_entity_type(table_name),
                 "has_deleted_field": has_deleted
             }
         except Exception as e:
-            print(f"⚠️ Error getting schema for {table_name}: {e}")
-            return {
-                "table_name": table_name,
-                "columns": [],
-                "error": str(e)
-            }
+            print(f"⚠️ Error: {e}")
+            return {"table_name": table_name, "columns": [], "error": str(e)}
     
-    def _guess_entity_type(self, table_name: str, columns: List[str]) -> str:
-        """Guess entity type from table name"""
-        table_lower = table_name.lower()
-        
-        entity_patterns = {
-            "student": ["student"],
-            "teacher": ["teacher"],
-            "user": ["user"],
-            "parent": ["parent"],
-            "role": ["role"],
-            "class": ["class"],
-            "subject": ["subject"],
-            "exam": ["exam"],
-            "fee": ["fee", "invoice", "payment"],
-            "attendance": ["attendance"],
-            "vehicle": ["vehicle"],
-            "route": ["route"],
-            "employee": ["employee"],
-            "assignment": ["assignment"],
-            "leave": ["leave"],
-            "department": ["department"],
-            "quiz": ["quiz"],
-            "certificate": ["certificate"],
-            "course": ["course"],
-            "section": ["section"],
-            "event": ["event"],
-            "message": ["message", "lnessage"],  # Note: lnessages in your DB
+    def _guess_entity_type(self, table_name: str) -> str:
+        """Guess entity type"""
+        patterns = {
+            "student": ["student"], "teacher": ["teacher"], "user": ["user"],
+            "parent": ["parent"], "class": ["class"], "subject": ["subject"],
+            "exam": ["exam"], "fee": ["fee", "invoice"], "attendance": ["attendance"],
+            "vehicle": ["vehicle"], "route": ["route"], "employee": ["employee"],
+            "assignment": ["assignment"], "leave": ["leave"], "department": ["department"],
+            "quiz": ["quiz"], "certificate": ["certificate"], "course": ["course"],
+            "section": ["section"], "event": ["event"], "message": ["message", "lnessage"],
             "notification": ["notification"]
         }
         
-        for entity, keywords in entity_patterns.items():
-            for keyword in keywords:
-                if keyword in table_lower:
-                    return entity
-        
+        table_lower = table_name.lower()
+        for entity, keywords in patterns.items():
+            if any(kw in table_lower for kw in keywords):
+                return entity
         return "unknown"
     
     def execute_query(self, sql: str, params: tuple = None) -> List[Dict]:
-        """Execute SQL query and return results as list of dicts"""
+        """
+        Execute SQL - NO BLOCKING OF 'deleted' COLUMN
+        
+        Security is handled in query_executor.py, not here
+        """
         try:
             with self.connection.cursor() as cursor:
                 cursor.execute(sql, params)
                 
-                # Get column names
-                columns = [col[0] for col in cursor.description]
+                if not cursor.description:
+                    return []
                 
-                # Fetch results
+                columns = [col[0] for col in cursor.description]
                 results = []
+                
                 for row in cursor.fetchall():
-                    # Convert row to dict, handling special types
                     row_dict = {}
                     for col_name, value in zip(columns, row):
-                        # Convert to JSON-serializable types
-                        if value is not None:
-                            row_dict[col_name] = value
-                        else:
-                            row_dict[col_name] = None
+                        row_dict[col_name] = value
                     results.append(row_dict)
                 
                 return results
+                
         except Exception as e:
-            print(f"❌ Query execution error: {e}")
-            print(f"   SQL: {sql}")
-            import traceback
-            traceback.print_exc()
+            print(f"❌ Query error: {e}")
             return []
     
-    def get_schema_info(self) -> Dict:
-        """Get schema information for all tables"""
-        all_tables = self.get_all_tables()
-        schema = {}
-        
-        # Filter out system tables
-        user_tables = [t for t in all_tables if not any(
-            skip in t.lower() for skip in [
-                'django_', 'auth_permission', 'auth_group_permissions',
-                'token_blacklist', 'celery'
-            ]
-        )]
-        
-        for table in user_tables:
-            schema[table] = self.get_table_schema_info(table)
-        
-        return schema
-    
     def discover_relevant_tables(self, query: str) -> List[str]:
-        """Discover which tables are relevant to the query"""
+        """Discover relevant tables"""
         all_tables = self.get_all_tables()
         query_lower = query.lower()
         
-        # Map keywords to entity types
         keyword_map = {
-            'user': ['user', 'account', 'profile'],
-            'student': ['student', 'pupil', 'learner'],
-            'teacher': ['teacher', 'instructor', 'faculty'],
-            'parent': ['parent', 'guardian'],
-            'class': ['class', 'grade', 'section'],
-            'subject': ['subject', 'course'],
-            'exam': ['exam', 'test', 'assessment', 'result'],
-            'fee': ['fee', 'payment', 'invoice', 'billing'],
-            'attendance': ['attendance', 'present', 'absent'],
-            'vehicle': ['vehicle', 'bus', 'transport'],
-            'route': ['route', 'path'],
-            'assignment': ['assignment', 'homework', 'submission'],
-            'leave': ['leave', 'absence', 'vacation'],
-            'employee': ['employee', 'staff', 'worker'],
-            'department': ['department', 'division'],
-            'quiz': ['quiz', 'question'],
-            'certificate': ['certificate', 'credential'],
-            'message': ['message', 'notification', 'announcement'],
-            'event': ['event', 'activity'],
+            'user': ['user', 'account'], 'student': ['student', 'pupil'],
+            'teacher': ['teacher', 'instructor'], 'parent': ['parent', 'guardian'],
+            'class': ['class', 'grade'], 'subject': ['subject'],
+            'exam': ['exam', 'test'], 'fee': ['fee', 'payment', 'invoice'],
+            'attendance': ['attendance'], 'vehicle': ['vehicle', 'bus'],
+            'route': ['route'], 'assignment': ['assignment', 'homework'],
+            'leave': ['leave'], 'employee': ['employee', 'staff'],
+            'department': ['department'], 'quiz': ['quiz'],
+            'certificate': ['certificate'], 'message': ['message']
         }
         
-        relevant_tables = []
-        
-        # Find relevant entity types
+        relevant = []
         for entity, keywords in keyword_map.items():
-            if any(keyword in query_lower for keyword in keywords):
-                # Find matching tables
-                table_name = self.get_actual_table_name(entity, query)
-                if table_name and table_name not in relevant_tables:
-                    relevant_tables.append(table_name)
+            if any(kw in query_lower for kw in keywords):
+                table = self.get_actual_table_name(entity, query)
+                if table and table not in relevant:
+                    relevant.append(table)
         
-        # If no specific matches, search broadly
-        if not relevant_tables:
-            query_words = [w for w in query_lower.split() if len(w) > 3]
+        if not relevant:
+            words = [w for w in query_lower.split() if len(w) > 3]
             for table in all_tables:
-                table_lower = table.lower()
-                if any(word in table_lower for word in query_words):
+                if any(w in table.lower() for w in words):
                     if not self._is_junction_table(table):
-                        relevant_tables.append(table)
+                        relevant.append(table)
         
-        print(f"🎯 Relevant tables for '{query}': {relevant_tables}")
-        return relevant_tables[:5]  # Limit to top 5 tables
+        print(f"🎯 Relevant tables: {relevant}")
+        return relevant[:5]
