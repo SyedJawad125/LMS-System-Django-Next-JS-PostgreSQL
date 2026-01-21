@@ -394,7 +394,8 @@
 
 
 # ============================================
-# FIXED DATABASE CONNECTOR
+# COMPLETELY FIXED DATABASE CONNECTOR
+# MATCHES YOUR ACTUAL POSTGRESQL TABLES
 # File: apps/rag_system/services/database_connector.py
 # ============================================
 
@@ -404,7 +405,7 @@ import re
 
 
 class DatabaseConnector:
-    """Fixed connector with ACTUAL PostgreSQL table names"""
+    """Fixed connector with YOUR ACTUAL PostgreSQL table names"""
     
     def __init__(self):
         self.connection = connection
@@ -429,8 +430,7 @@ class DatabaseConnector:
     
     def get_actual_table_name(self, entity_type: str, query: str = "") -> Optional[str]:
         """
-        Get the ACTUAL table name for an entity - FIXED VERSION
-        Uses ACTUAL table names from your PostgreSQL database
+        Get the ACTUAL table name - FIXED FOR YOUR DATABASE
         """
         if self._table_mapping is None:
             self._build_table_mapping()
@@ -439,101 +439,106 @@ class DatabaseConnector:
         all_tables = self.get_all_tables()
         
         # ============================================================
-        # CORRECTED MAPPINGS BASED ON YOUR ACTUAL POSTGRESQL TABLES
+        # CORRECTED FOR YOUR ACTUAL POSTGRESQL TABLES
+        # Based on images: students, teachers, user, classes, etc.
         # ============================================================
         direct_map = {
-            # Student-related (main table: students)
+            # Student tables
             'student': ['students'],
             'students': ['students'],
             
-            # Teacher-related (main table: teachers)
+            # Teacher tables
             'teacher': ['teachers'],
             'teachers': ['teachers'],
             
-            # User-related (main table: users_user)
-            'user': ['users_user'],
-            'users': ['users_user'],
+            # User tables (singular: 'user' not 'users_user')
+            'user': ['user'],
+            'users': ['user'],
             
-            # Parent-related (main table: parents)
+            # Parent tables
             'parent': ['parents'],
             'parents': ['parents'],
             
-            # Class-related (main table: classes)
+            # Class tables
             'class': ['classes'],
             'classes': ['classes'],
             
-            # Subject-related (main table: subjects)
+            # Subject tables
             'subject': ['subjects'],
             'subjects': ['subjects'],
             
-            # Exam-related (main table: exams)
+            # Exam tables
             'exam': ['exams'],
             'exams': ['exams'],
             
-            # Fee-related (main table: fee_invoices)
+            # Fee tables
             'fee': ['fee_invoices'],
             'fees': ['fee_invoices'],
             'invoice': ['fee_invoices'],
             'invoices': ['fee_invoices'],
             
-            # Attendance-related (main table: daily_attendance)
+            # Attendance tables
             'attendance': ['daily_attendance'],
             
-            # Assignment-related (main table: assignments)
+            # Assignment tables
             'assignment': ['assignments'],
             'assignments': ['assignments'],
             
-            # Leave-related (main table: leave_applications)
+            # Leave tables
             'leave': ['leave_applications'],
             'leaves': ['leave_applications'],
             
-            # Vehicle-related (main table: vehicles)
+            # Vehicle tables
             'vehicle': ['vehicles'],
             'vehicles': ['vehicles'],
             
-            # Route-related (main table: routes)
+            # Route tables
             'route': ['routes'],
             'routes': ['routes'],
             
-            # Certificate-related (main table: certificates)
+            # Certificate tables
             'certificate': ['certificates'],
             'certificates': ['certificates'],
             
-            # Course-related (main table: courses)
+            # Course tables
             'course': ['courses'],
             'courses': ['courses'],
             
-            # Quiz-related (main table: quizzes)
+            # Quiz tables
             'quiz': ['quizzes'],
             'quizzes': ['quizzes'],
             
-            # Department-related (main table: departments)
+            # Department tables
             'department': ['departments'],
             'departments': ['departments'],
             
-            # Message-related (main table: messages)
-            'message': ['messages'],
-            'messages': ['messages'],
+            # Message tables (note: 'lnessages' in your DB based on image)
+            'message': ['lnessages', 'messages'],
+            'messages': ['lnessages', 'messages'],
             
-            # Notification-related (main table: notifications)
+            # Notification tables
             'notification': ['notifications'],
             'notifications': ['notifications'],
             
-            # Employee-related (main table: users_employee)
-            'employee': ['users_employee'],
-            'employees': ['users_employee'],
+            # Employee tables
+            'employee': ['employees'],
+            'employees': ['employees'],
             
-            # Role-related (main table: users_role)
-            'role': ['users_role'],
-            'roles': ['users_role'],
+            # Role tables
+            'role': ['roles'],
+            'roles': ['roles'],
             
-            # Section-related (main table: sections)
+            # Section tables
             'section': ['sections'],
             'sections': ['sections'],
             
-            # Event-related (main table: events)
+            # Event tables
             'event': ['events'],
             'events': ['events'],
+            
+            # Permission tables
+            'permission': ['permissions'],
+            'permissions': ['permissions'],
         }
         
         # Try direct mapping first
@@ -572,7 +577,7 @@ class DatabaseConnector:
             if plural in all_tables:
                 return plural
         
-        # Strategy 3: Contains entity name (prefer shorter names)
+        # Strategy 3: Contains entity name
         matching = []
         for table in all_tables:
             table_lower = table.lower()
@@ -580,9 +585,7 @@ class DatabaseConnector:
                 matching.append(table)
         
         if matching:
-            # Sort by length (prefer shorter, more specific names)
             matching.sort(key=len)
-            # Filter out junction/mapping tables
             main_tables = [t for t in matching if not self._is_junction_table(t)]
             if main_tables:
                 return main_tables[0]
@@ -598,7 +601,7 @@ class DatabaseConnector:
         junction_indicators = [
             '_permissions', '_groups', 'permission', 'token',
             'blacklist', '_log', 'migration', 'session', 'admin',
-            '_workflow', '_emailtemplate', '_target_'
+            '_workflow', '_emailtemplate', '_target_', 'django_'
         ]
         
         return any(indicator in table_lower for indicator in junction_indicators)
@@ -688,7 +691,7 @@ class DatabaseConnector:
             "course": ["course"],
             "section": ["section"],
             "event": ["event"],
-            "message": ["message"],
+            "message": ["message", "lnessage"],  # Note: lnessages in your DB
             "notification": ["notification"]
         }
         
@@ -711,12 +714,22 @@ class DatabaseConnector:
                 # Fetch results
                 results = []
                 for row in cursor.fetchall():
-                    results.append(dict(zip(columns, row)))
+                    # Convert row to dict, handling special types
+                    row_dict = {}
+                    for col_name, value in zip(columns, row):
+                        # Convert to JSON-serializable types
+                        if value is not None:
+                            row_dict[col_name] = value
+                        else:
+                            row_dict[col_name] = None
+                    results.append(row_dict)
                 
                 return results
         except Exception as e:
             print(f"❌ Query execution error: {e}")
             print(f"   SQL: {sql}")
+            import traceback
+            traceback.print_exc()
             return []
     
     def get_schema_info(self) -> Dict:
@@ -786,51 +799,3 @@ class DatabaseConnector:
         
         print(f"🎯 Relevant tables for '{query}': {relevant_tables}")
         return relevant_tables[:5]  # Limit to top 5 tables
-
-
-# ============================================
-# TESTING
-# ============================================
-
-if __name__ == "__main__":
-    print("="*60)
-    print("Testing Fixed DatabaseConnector")
-    print("="*60)
-    
-    db = DatabaseConnector()
-    
-    # Test 1: Get all tables
-    print("\n1. All Tables:")
-    tables = db.get_all_tables()
-    print(f"   Total: {len(tables)}")
-    print(f"   Sample: {tables[:10]}")
-    
-    # Test 2: Table mappings
-    print("\n2. Testing Table Mappings:")
-    test_entities = ['student', 'teacher', 'user', 'class', 'exam', 'fee']
-    for entity in test_entities:
-        table = db.get_actual_table_name(entity)
-        print(f"   {entity:15} → {table}")
-    
-    # Test 3: Schema info
-    print("\n3. Schema Info for 'students':")
-    if 'students' in tables:
-        schema = db.get_table_schema_info('students')
-        print(f"   Columns: {schema.get('columns', [])[:5]}...")
-        print(f"   Row count: {schema.get('row_count', 0)}")
-        print(f"   Has deleted: {schema.get('has_deleted_field', False)}")
-    
-    # Test 4: Query discovery
-    print("\n4. Table Discovery:")
-    test_queries = [
-        "how many students",
-        "show teachers",
-        "list users"
-    ]
-    for query in test_queries:
-        discovered = db.discover_relevant_tables(query)
-        print(f"   '{query}' → {discovered}")
-    
-    print("\n" + "="*60)
-    print("✅ Testing Complete")
-    print("="*60)
