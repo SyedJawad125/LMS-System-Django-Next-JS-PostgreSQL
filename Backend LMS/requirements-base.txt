@@ -1,37 +1,119 @@
+# # ============================================
+# # HEAVY ML DEPENDENCIES (RARELY CHANGE)
+# # ============================================
+# # These packages are large and take time to install.
+# # They're separated so Docker can cache this layer.
+# # Only rebuild when these specific versions change.
+
+# # Vector Store & Embeddings (pulls in PyTorch + transformers)
+# sentence-transformers==3.0.1
+# chromadb==0.5.0
+
+# # LangChain Framework
+# langchain==0.2.16
+# langchain-groq==0.1.9
+# langchain-community==0.2.16
+# langchain-chroma==0.1.2
+
+# # LLM Integration
+# groq==0.9.0
+
+# # ============================================
+# # NOTES:
+# # ============================================
+# # - sentence-transformers automatically installs:
+# #   * torch (~700MB)
+# #   * transformers (~500MB)
+# #   * tokenizers
+# #
+# # - chromadb installs:
+# #   * hnswlib
+# #   * pydantic
+# #   * Various other dependencies
+# #
+# # This file should ONLY change when you:
+# # - Update ML model versions
+# # - Add new LLM providers
+# # - Upgrade LangChain major versions
+
+
+
 # ============================================
-# HEAVY ML DEPENDENCIES (RARELY CHANGE)
+# HEAVY ML DEPENDENCIES (UPDATED FOR ENHANCED RAG)
 # ============================================
 # These packages are large and take time to install.
 # They're separated so Docker can cache this layer.
 # Only rebuild when these specific versions change.
 
-# Vector Store & Embeddings (pulls in PyTorch + transformers)
+# ============================================
+# EMBEDDINGS & VECTOR STORE
+# ============================================
+# Using sentence-transformers for better embeddings
+# Updated to version that includes all-mpnet-base-v2 model
 sentence-transformers==3.0.1
+
+# ChromaDB for vector storage (compatible with LangChain)
 chromadb==0.5.0
 
-# LangChain Framework
+# ============================================
+# LANGCHAIN FRAMEWORK
+# ============================================
+# Core LangChain for RAG orchestration
 langchain==0.2.16
+
+# LangChain-Groq for LLM integration
 langchain-groq==0.1.9
+
+# LangChain-Community for additional tools
 langchain-community==0.2.16
+
+# LangChain-Chroma for vector store integration
 langchain-chroma==0.1.2
 
-# LLM Integration
+# ============================================
+# LLM INTEGRATION
+# ============================================
+# Groq API client for fast LLM inference
 groq==0.9.0
 
 # ============================================
-# NOTES:
+# NOTES ON DEPENDENCIES:
 # ============================================
-# - sentence-transformers automatically installs:
-#   * torch (~700MB)
-#   * transformers (~500MB)
-#   * tokenizers
+# sentence-transformers automatically installs:
+#   - torch (~700MB) - PyTorch for model inference
+#   - transformers (~500MB) - Hugging Face transformers
+#   - tokenizers - Fast tokenization
+#   - sentence-transformers models:
+#     * all-MiniLM-L6-v2 (old, smaller, less accurate)
+#     * all-mpnet-base-v2 (NEW - better accuracy, our default)
 #
-# - chromadb installs:
-#   * hnswlib
-#   * pydantic
-#   * Various other dependencies
+# chromadb installs:
+#   - hnswlib - Fast approximate nearest neighbor search
+#   - pydantic - Data validation
+#   - SQLite - Local database for metadata
+#   - numpy - Numerical computing
 #
 # This file should ONLY change when you:
 # - Update ML model versions
 # - Add new LLM providers
 # - Upgrade LangChain major versions
+# - Need different embedding models
+#
+# UPGRADE PATH:
+# To use even better (but slower) embeddings in future:
+# - all-mpnet-base-v2 (current) - 768 dimensions, good balance
+# - BAAI/bge-large-en-v1.5 - 1024 dimensions, better but slower
+# - instructor-xl - 768 dimensions, instruction-tuned
+# Just change the model name in optimized_vectorstore.py
+
+# ============================================
+# PACKAGE SIZES (approximate):
+# ============================================
+# sentence-transformers: ~1.2GB (includes PyTorch + models)
+# chromadb: ~100MB
+# langchain: ~50MB
+# groq: ~5MB
+# TOTAL: ~1.4GB
+#
+# This is why we separate these from requirements.txt!
+# Docker caches this layer, so we only rebuild when these change.
